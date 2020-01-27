@@ -1,4 +1,7 @@
 import time
+import numpy as np
+from scipy.fftpack import fft
+import matplotlib.pyplot as plt
 
 A0 =  '/sys/bus/iio/devices/iio:device0/in_voltage0_raw'
 A1 =  '/sys/bus/iio/devices/iio:device0/in_voltage1_raw'
@@ -34,4 +37,13 @@ interval = end - start
 
 print( str(1/(interval / BURST_SIZE)) + ' sampling frequency (Hz) ')
 
-print(dataA0)
+#print(dataA0)
+
+Yfft = fft(dataA0)
+
+plt.plot(Yfft)
+plt.grid()
+plt.show()
+
+
+
