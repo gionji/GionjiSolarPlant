@@ -1,29 +1,40 @@
 import sys
 import time
 
-GPIO_PATH = '/gpio/gpio'
+GPIO_EXPORT   = '/sys/class/gpio/export'
+OS_PATH       = '/sys/class/gpio/gpio'
+UDUBUNTU_PATH = '/gpio/gpio'
 
-RELAY_1_PIN = 24
-RELAY_2_PIN = 25
-RELAY_3_PIN = 26
-RELAY_4_PIN = 27
+RELAY_PCB_PIN  = [24, 25, 26, 27]
+RELAY_GPIO_NUM = [25, 22, 14, 15]
 
+
+GPIO      = RELAY_GPIO_NUM 
+GPIO_PATH = OS_PATH
+
+RELAY = [ GPIO_PATH + str( GPIO[0] ) + '/',
+               GPIO_PATH + str( GPIO[1] ) + '/',
+               GPIO_PATH + str( GPIO[2] ) + '/',
+               GPIO_PATH + str( GPIO[3] ) + '/', ]
+               
 HIGH = '1'
 LOW  = '0'
 
-RELAY_1_PATH = GPIO_PATH + str( RELAY_1_PIN ) + '/' 
-RELAY_2_PATH = GPIO_PATH + str( RELAY_2_PIN ) + '/'
-RELAY_3_PATH = GPIO_PATH + str( RELAY_3_PIN ) + '/'
-RELAY_4_PATH = GPIO_PATH + str( RELAY_4_PIN ) + '/'
-
-SWITCH_1 = RELAY_1_PATH
-SWITCH_2 = RELAY_2_PATH
-SWITCH_3 = RELAY_2_PATH
-SWITCH_4 = RELAY_2_PATH
+SWITCH_1 = RELAY[0]
+SWITCH_2 = RELAY[1]
+SWITCH_3 = RELAY[2]
+SWITCH_4 = RELAY[3]
 
 
 
-def setupGpioDirection(*gpios):
+def setupGpioDirection(gpios, gpiosNum):
+    
+    for elem in gpiosNum:
+        f = open(GPIO_EXPORT, 'w+')
+        f.write( elem )
+        f.flush()
+        f.close()
+    
     for elem in gpios:
         f = open( elem + 'direction' , "w+")
         f.write('out')
@@ -46,7 +57,7 @@ def turnOffSwitch(relayId):
 
 
 def main():
-    setupGpioDirection(SWITCH_1, SWITCH_2, SWITCH_3, SWITCH_4)
+    setupGpioDirection( RELAY, GPIO )
 
     turnOnSwitch(SWITCH_1)
     time.sleep(1)
