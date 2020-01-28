@@ -25,13 +25,30 @@ def readBurst(pin, size):
 
 
 start = time.time()
-dataA0 = readBurst( A0, BURST_SIZE )
-dataA1 = readBurst( A1, BURST_SIZE )
+
+dataAdc = readBurst( A0, BURST_SIZE )
+print(dataAdc[100:110])
+
+dataAdc = readBurst( A1, BURST_SIZE )
+print(dataAdc[100:110])
+
+dataAdc = readBurst( A2, BURST_SIZE )
+print(dataAdc[100:110])
+
+dataAdc = readBurst( A3, BURST_SIZE )
+print(dataAdc[100:110])
+
+dataAdc = readBurst( A4, BURST_SIZE )
+print(dataAdc[100:110])
+
+dataAdc = readBurst( A5, BURST_SIZE )
+print(dataAdc[100:110])
+
+
+
 end = time.time()
 
 interval = end - start
 
 
-print( str(1/(interval / BURST_SIZE)) + ' sampling frequency (Hz) ')
-
-print(dataA0)
+print( str(1/(interval*5 / BURST_SIZE)) + ' sampling frequency (Hz) ')
