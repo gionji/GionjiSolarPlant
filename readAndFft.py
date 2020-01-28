@@ -27,23 +27,28 @@ def readBurst(pin, size):
     return data
 
 
-start = time.time()
-dataA0 = readBurst( A0, BURST_SIZE )
-dataA1 = readBurst( A1, BURST_SIZE )
-end = time.time()
 
-interval = end - start
+SCALE = 1
+BIAS = 0
+
+def currentCC(pin, size):
+    mean = 0
+    data = readBurst(pin, size)
+    for i in data:
+        mean = mean + i
+
+    mean = mean / size
+
+    res = (mean * SCALE) - BIAS
+    return res
 
 
-print( str(1/(interval / BURST_SIZE)) + ' sampling frequency (Hz) ')
+print(currentCC(A3, 128))
+
+
 
 #print(dataA0)
 
-Yfft = fft(dataA0)
-
-plt.plot(Yfft)
-plt.grid()
-plt.show()
-
+#Yfft = fft(dataA0)
 
 

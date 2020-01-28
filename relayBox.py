@@ -17,13 +17,13 @@ RELAY = [ GPIO_PATH + str( GPIO[0] ) + '/',
                GPIO_PATH + str( GPIO[2] ) + '/',
                GPIO_PATH + str( GPIO[3] ) + '/', ]
                
-HIGH = '1'
-LOW  = '0'
+HIGH = '0'
+LOW  = '1'
 
-SWITCH_1 = RELAY[0]
-SWITCH_2 = RELAY[1]
-SWITCH_3 = RELAY[2]
-SWITCH_4 = RELAY[3]
+INVERTER = RELAY[0]
+EXTERNAL_POWER = RELAY[1]
+PLUG_B = RELAY[2]
+PLUG_A = RELAY[3]
 
 
 
@@ -42,26 +42,42 @@ def setupGpioDirection(gpios, gpiosNum):
         f.close()
 
 
-def turnOnSwitch(relayId):
-    f = open( elem + 'value' , "w+")
-    f.write( HIGH )
-    f.flush()
-    f.close()
+def turnOnSwitch(*relay):
+    for elem in relay:
+        f = open( elem + 'value' , "w+")
+        f.write( HIGH )
+        f.flush()
+        f.close()
 
 
-def turnOffSwitch(relayId):
-    f = open( elem + 'value' , "w+")
-    f.write( LOW )
-    f.flush()
-    f.close()
+def turnOffSwitch(*relay):
+    for elem in relay:    
+        f = open( elem + 'value' , "w+")
+        f.write( LOW )
+        f.flush()
+        f.close()
+
+def enableExternalPower():
+    turnOnSwitch(EXTERNAL_POWER)
+
+def disableExternalPower():
+    turnOffSwitch(EXTERNAL_POWER)
+
+def enableInverter():
+    turnOnSwitch(INVERTER)
+
+def disableInverter():
+    turnOffSwitch(INVERTER)
 
 
 def main():
-    setupGpioDirection( RELAY, GPIO )
+    #setupGpioDirection( RELAY, GPIO )
 
-    turnOnSwitch(SWITCH_1)
+    turnOffSwitch(RELAY[0], RELAY[1], RELAY[2], RELAY[3] ) 
+    
     time.sleep(1)
-    turnOffSwitch(SWITCH_1)
+    
+    turnOnSwitch(PLUG_A)
 
 
 if __name__== "__main__":
