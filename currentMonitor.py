@@ -15,9 +15,9 @@ A5 =  '/sys/bus/iio/devices/iio:device1/in_voltage1_raw'
 ADC = [A0, A1, A2, A3]
 
 CURRENT_BIAS  = [ 2123.0, 2135.0, 0 , 2088.0 , 0 , 0 ]
-CURRENT_SCALE = [ 1 , 1 , 1 , 155 , 1 , 1 ]
+CURRENT_SCALE = [ 0.000356589  ,  0.000356589    1, 1 ,    155 , 1 , 1 ]
 
-DEFAULT_BURST_SIZE = 2048;
+DEFAULT_BURST_SIZE = 1024;
 
 PLUG_1   = 0
 PLUG_2   = 1
@@ -78,6 +78,8 @@ def calculateCurrentIrms(pin, size=DEFAULT_BURST_SIZE):
     data = readBurst( ADC[pin], size )
     data = [x - CURRENT_BIAS[pin] for x in data]
 
+    #print("Current bias = " + str(CURRENT_BIAS[pin]))
+
     for d in data:
         mean = mean + (d * d)
 
@@ -89,14 +91,14 @@ def calculateCurrentIrms(pin, size=DEFAULT_BURST_SIZE):
 
 while(True):
     meanPlug1 = calculateCurrentBias( PLUG_1 )
-    meanPlug2 = calculateCurrentBias( PLUG_2 )
+#    meanPlug2 = calculateCurrentBias( PLUG_2 )
 
     currentPlug1 = calculateCurrentIrms( PLUG_1 )
-    currentPlug2 = calculateCurrentIrms( PLUG_2 )
+#    currentPlug2 = calculateCurrentIrms( PLUG_2 )
 
     currentDcAc = calculateCurrentCC( INVERTER )
 
-    print(meanPlug1, meanPlug2, currentPlug1, currentPlug2, currentDcAc)
+    print(meanPlug1, currentPlug1,  currentDcAc)
 
 #print(dataA0)
 

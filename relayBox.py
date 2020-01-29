@@ -78,7 +78,7 @@ def main():
     time.sleep(1)
     
     turnOnSwitch(PLUG_A)
-
+    enableInverter()
 
 if __name__== "__main__":
     main()
