@@ -70,6 +70,16 @@ def calculateCurrentIrms(pin, size=DEFAULT_BURST_SIZE):
     return irms
 
 
+def getCurrentPlug1():
+    return calculateCurrentIrms( PLUG_1 )
+
+
+def getCurrentPlug2():
+    return calculateCurrentIrms( PLUG_2 )
+
+
+def getCurrentInverter():
+    return calculateCurrentCC( INVERTER )
 
 
 while(True):

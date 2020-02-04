@@ -1,50 +1,57 @@
-from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+
 from losantmqtt import Device
 import os
 import json
 import datetime
 import time
 
+import currentMonitor
+import relayBox
+import sensors
+import chargeController
+
+data = dict()
+
+import tornado.ioloop
+import tornado.web
+
+class Hello(tornado.web.RequestHandler):
+    def get(self):
+        self.write("Hello, world by Gionji solar Plant: " + str() )
+
+class User(tornado.web.RequestHandler):
+
+    def get(self):
+        form = """<form method="post">
+        <input type="text" name="username"/>
+        <input type="text" name="designation"/>
+        <input type="submit"/>
+        </form>"""
+        self.write(form)
+
+    def post(self):
+        username = self.get_argument('username')
+        designation = self.get_argument('designation')
+        self.write("Wow " + username + " you're a " + designation)
+
+application = tornado.web.Application([
+    (r"/", Hello),
+    (r"/user/", User),
+])
+
+
 ACCESS_KEY = 'eed2fd5b-8219-4b18-a858-cdf345185cd6'
 ACCESS_SECRET = '1d8c634d39551e13a6da838bfdc152cdc43e10362bca3a888cbfc2a411020dd3'
 DEVICE_ID = '5e2ec7308eb4af0006ecd530'
 
-BAUDRATE = 115200
-PORT = '/dev/ttyUSB0'
+
+DELAY = 1.0
+
 
 # Construct Losant device
 device = Device(DEVICE_ID, ACCESS_KEY, ACCESS_SECRET)
 
-def readModbus():
-    data = dict()
-
-    print("Connect modbus...")
-    client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
-    client.connect()
-    # print( client)
-    result = client.read_input_registers(0x3100, 15, unit=1)
-    result1 = client.read_input_registers(0x3300, 14, unit=1)
-    result2 = client.read_input_registers(0x3110, 2, unit=1)
-    # result3 = client.read_input_registers(0x311,15,unit=1)
-    # result4 = client.read_input_registers(0x3200,15,unit=1)
-    # print (result)
-    
-#data['date'] = datetime.datetime.now()
-    data['panelVoltage'] = float(result.registers[0] / 100.0)
-    data['panelCurrent'] = float(result.registers[1] / 100.0)
-    data['batteryVoltage'] = float(result.registers[4] / 100.0)
-    data['batteryCurrent'] = float(result.registers[5] / 100.0)
-    data['loadVoltage'] = float(result.registers[12] / 100.0)
-    data['loadCurrent'] = float(result.registers[13] / 100.0)
-    data['inPower'] =  data['panelVoltage'] * data['panelCurrent'] 
-    data['outPower'] =  data['loadVoltage'] * data['loadCurrent']
-    #data['batteryTemperature'] = float(result2.registers[0] / 100)
-    # bateryCapacity = float(result3.registers[10] /100)
-    # bateryStatus = (result4.registers[0])
-
-    return data
-
-def sendDataToLosant(data):
+def sendDataToLosant(data):s
     print("Sending to Losant...")
     device.send_state(data)
 
@@ -55,19 +62,30 @@ def connectToLosant():
 
 
 
+
+
 def main():
     print('c')
     connectToLosant()
-    
+
     while(True):
+        global data = dict()
+
         try:
-            data = readModbus()
-            print(data)
+            data = readAllData()
+            data['plug_1_current']   = currentMonitor.getCurrentPlug1()
+            data['plug_2_current']   = currentMonitor.getCurrentPlug2()
+            data['inverter_current'] = currentMonitor.getCurrentInverter()
+            data['irradiation']      = sensors.getIrradiation()
+
             sendDataToLosant(data)
         except Exception as e:
             print( e )
 
-        time.sleep(1)
+        time.sleep( DELAY )
+
+
+
 
 if __name__ == "__main__":
     main()
