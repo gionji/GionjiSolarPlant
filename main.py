@@ -61,27 +61,65 @@ def connectToLosant():
     device.connect(blocking=False)
 
 
-
+def packToDb(data):
+    ret = (
+        data['panelVoltage'],
+        data['panelCurrent'],
+        data['batteryVoltage'],
+        data['batteryCurrent'],
+        data['loadVoltage'],
+        data['loadCurrent'],
+        data['inPower'],
+        data['outPower'],   
+        data['plug_1_current'],
+        data['plug_2_current'],  
+        data['inverter_current'],
+        data['irradiation']
+            )
+    return ret
 
 
 def main():
     print('c')
     connectToLosant()
 
+    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
+    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
+    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
+
+
     while(True):
         global data
-        #data = dict()
+        data = dict()
+
+        data = chargeController.readAll()
 
         try:
-            data = chargeController.readAll()
+            data['irradiation']      = sensors.getIrradiation()
+        except Exception as e:
+            data['irradiation']      = None 
+            print( e )
+
+        try:
             data['plug_1_current']   = currentMonitor.getCurrentPlug1()
             data['plug_2_current']   = currentMonitor.getCurrentPlug2()
-            data['inverter_current'] = currentMonitor.getCurrentInverter()
-            data['irradiation']      = sensors.getIrradiation()
+            data['inverter_current'] = currentMonitor.getCurrentInverter()    
+        except Exception as e:
+            data['plug_1_current']   = None
+            data['plug_2_current']   = None
+            data['inverter_current'] = None
+            print( e )
 
+        try:
             sendDataToLosant(data)
         except Exception as e:
             print( e )
+
+        data = packToDb( data )
+
+
+
+        print( data )
 
         time.sleep( DELAY )
 
