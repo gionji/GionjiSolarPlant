@@ -7,6 +7,7 @@ import time
 
 import currentMonitor
 import relayBox
+import database
 import sensors
 import chargeController
 
@@ -116,8 +117,6 @@ def main():
             print( e )
 
         data = packToDb( data )
-
-
 
         print( data )
 
