@@ -51,7 +51,7 @@ DELAY = 1.0
 # Construct Losant device
 device = Device(DEVICE_ID, ACCESS_KEY, ACCESS_SECRET)
 
-def sendDataToLosant(data):s
+def sendDataToLosant(data):
     print("Sending to Losant...")
     device.send_state(data)
 
@@ -69,10 +69,11 @@ def main():
     connectToLosant()
 
     while(True):
-        global data = dict()
+        global data
+        #data = dict()
 
         try:
-            data = readAllData()
+            data = chargeController.readAll()
             data['plug_1_current']   = currentMonitor.getCurrentPlug1()
             data['plug_2_current']   = currentMonitor.getCurrentPlug2()
             data['inverter_current'] = currentMonitor.getCurrentInverter()
@@ -88,4 +89,8 @@ def main():
 
 
 if __name__ == "__main__":
+    application.listen(8888)
+   
+    #tornado.ioloop.IOLoop.instance().start()
+    
     main()

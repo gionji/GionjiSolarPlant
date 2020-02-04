@@ -19,15 +19,14 @@ PLUG_2   = 1
 INVERTER = 3
 
 
-
 def calculateCurrentBias(pin):
     # enableInverter()
     # turnOffRelay()
 
-    size = DEFAULT_BURST_SIZE
+    size = adc.DEFAULT_BURST_SIZE
 
     pinPath = ADC[pin]
-    data = readBurst(pinPath, size)
+    data = adc.readBurst(pinPath, size)
     mean = 0
 
     for i in data:
@@ -42,9 +41,9 @@ def calculateCurrentBias(pin):
 
 
 
-def calculateCurrentCC(pin, size=DEFAULT_BURST_SIZE):
+def calculateCurrentCC(pin, size=adc.DEFAULT_BURST_SIZE):
     mean = 0
-    data = readBurst(ADC[pin], size)
+    data = adc.readBurst(ADC[pin], size)
     for i in data:
         mean = mean + i
 
@@ -55,9 +54,9 @@ def calculateCurrentCC(pin, size=DEFAULT_BURST_SIZE):
 
 
 
-def calculateCurrentIrms(pin, size=DEFAULT_BURST_SIZE):
+def calculateCurrentIrms(pin, size=adc.DEFAULT_BURST_SIZE):
     mean = 0
-    data = readBurst( ADC[pin], size )
+    data = adc.readBurst( ADC[pin], size )
     data = [x - CURRENT_BIAS[pin] for x in data]
 
     #print("Current bias = " + str(CURRENT_BIAS[pin]))
@@ -81,7 +80,7 @@ def getCurrentPlug2():
 def getCurrentInverter():
     return calculateCurrentCC( INVERTER )
 
-
+'''
 while(True):
     meanPlug1 = calculateCurrentBias( PLUG_1 )
 #    meanPlug2 = calculateCurrentBias( PLUG_2 )
@@ -94,3 +93,4 @@ while(True):
     irr = getIrradiation()
 
     print(meanPlug1, currentPlug1,  currentDcAc, irr)
+'''
