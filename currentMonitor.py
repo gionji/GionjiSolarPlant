@@ -5,41 +5,19 @@ import matplotlib.pyplot as plt
 import platform
 import math
 
-A0 =  '/sys/bus/iio/devices/iio:device0/in_voltage0_raw'
-A1 =  '/sys/bus/iio/devices/iio:device0/in_voltage1_raw'
-A2 =  '/sys/bus/iio/devices/iio:device0/in_voltage2_raw'
-A3 =  '/sys/bus/iio/devices/iio:device0/in_voltage3_raw'
-A4 =  '/sys/bus/iio/devices/iio:device1/in_voltage0_raw'
-A5 =  '/sys/bus/iio/devices/iio:device1/in_voltage1_raw'
+import adc
 
-ADC = [A0, A1, A2, A3]
-IRRADIANCE = A5
+ADC        = [ adc.A0, adc.A1, adc.A2, adc.A3 ]
+IRRADIANCE = adc.A5
 
+CURRENT_BIAS  = [      2123.0 ,      2135.0 , 0 , 2088.0 , 0 , 0 ]
+CURRENT_SCALE = [ 0.000356589 , 0.000356589 , 1 ,    155 , 1 , 1 ]
 
-CURRENT_BIAS  = [ 2123.0, 2135.0, 0 , 2088.0 , 0 , 0 ]
-CURRENT_SCALE = [ 0.000356589  ,  0.000356589, 1 ,    155 , 1 , 1 ]
-LIGHT_SCALE = 1
-
-
-DEFAULT_BURST_SIZE = 1024;
 
 PLUG_1   = 0
 PLUG_2   = 1
 INVERTER = 3
 
-
-def readAdc(pinPath):
-    f = open(pinPath, 'r')
-    data = int(f.read())
-    f.close()
-    return data
-
-
-def readBurst(pinPath, size=DEFAULT_BURST_SIZE):
-    data = list()
-    for i in range( 0, int(size) ):
-        data.append( readAdc(pinPath) )
-    return data
 
 
 def calculateCurrentBias(pin):
@@ -56,7 +34,7 @@ def calculateCurrentBias(pin):
         mean = mean + i
 
     mean = mean / size
-    
+
     global CURRENT_BIAS
     CURRENT_BIAS[pin] = mean
 
@@ -87,17 +65,10 @@ def calculateCurrentIrms(pin, size=DEFAULT_BURST_SIZE):
     for d in data:
         mean = mean + (d * d)
 
-    irms = CURRENT_SCALE[pin] * math.sqrt(mean) 
+    irms = CURRENT_SCALE[pin] * math.sqrt(mean)
 
     return irms
 
-
-##################################################3
-def getIrradiation():
-    val = readAdc( IRRADIANCE )
-    value = val * LIGHT_SCALE
-    return value
-##################################################
 
 
 
@@ -113,9 +84,3 @@ while(True):
     irr = getIrradiation()
 
     print(meanPlug1, currentPlug1,  currentDcAc, irr)
-
-#print(dataA0)
-
-#Yfft = fft(dataA0)
-
-
