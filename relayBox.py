@@ -25,6 +25,13 @@ EXTERNAL_POWER = RELAY[1]
 PLUG_B = RELAY[2]
 PLUG_A = RELAY[3]
 
+PLUG_A_ID = 'a'
+PLUG_B_ID = 'b'
+INVERTER_ID = 'i'
+EXTERNAL_SOURCE_ID = 's'
+
+STATE_ON = '1'
+STATE_OFF = '0'
 
 
 def setupGpioDirection(gpios, gpiosNum):
@@ -57,6 +64,22 @@ def turnOffSwitch(*relay):
         f.flush()
         f.close()
 
+
+
+def enablePlugA():
+    turnOnSwitch(PLUG_A)
+
+def disablePlugA():
+    turnOffSwitch(PLUG_A)
+
+def enablePlugB():
+    turnOnSwitch(PLUG_B)
+
+def disablePlugB():
+    turnOffSwitch(PLUG_B)
+
+
+
 def enableExternalPower():
     turnOnSwitch(EXTERNAL_POWER)
 
@@ -70,6 +93,8 @@ def disableInverter():
     turnOffSwitch(INVERTER)
 
 
+
+
 def main():
     #setupGpioDirection( RELAY, GPIO )
 
@@ -79,6 +104,8 @@ def main():
     
     turnOnSwitch(PLUG_A)
     enableInverter()
+
+
 
 if __name__== "__main__":
     main()

@@ -39,7 +39,7 @@ def readAll():
         data['loadCurrent'] = None
         data['inPower'] =  None
         data['outPower'] = None
-
+        print(e)
     return data
 
 
