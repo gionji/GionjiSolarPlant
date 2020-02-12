@@ -10,13 +10,13 @@ import adc
 ADC        = [ adc.A0, adc.A1, adc.A2, adc.A3 ]
 IRRADIANCE = adc.A5
 
-CURRENT_BIAS  = [      2123.0 ,      2135.0 , 0 , 2088.0 , 0 , 0 ]
-CURRENT_SCALE = [ 0.000356589 , 0.000356589 , 1 ,    155 , 1 , 1 ]
+CURRENT_BIAS  = [      2123.0 ,      2135.0 ,  2088.0 , 0, 0 , 0 ]
+CURRENT_SCALE = [ 0.000356589 , 0.000356589 ,     155 , 1, 1 , 1 ]
 
 
 PLUG_1   = 0
 PLUG_2   = 1
-INVERTER = 3
+INVERTER = 2
 
 
 def calculateCurrentBias(pin):
