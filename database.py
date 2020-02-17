@@ -84,12 +84,14 @@ def create_data(conn, data ):
                                        time
                                     )
               VALUES( ?,?,?,?,?, ?,?,?,?,?, ?,?,? ) '''
+    try:
+        cur = conn.cursor()
+        cur.execute(sql, data)
 
-    cur = conn.cursor()
-    cur.execute(sql, data)
-
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(e)
 
 
 
