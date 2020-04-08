@@ -12,6 +12,8 @@ RELAY_GPIO_NUM = [25, 22, 14, 15]
 GPIO      = RELAY_GPIO_NUM 
 GPIO_PATH = OS_PATH
 
+
+## gpio files paths for each relay
 RELAY = [ GPIO_PATH + str( GPIO[0] ) + '/',
                GPIO_PATH + str( GPIO[1] ) + '/',
                GPIO_PATH + str( GPIO[2] ) + '/',
@@ -30,8 +32,17 @@ PLUG_B_ID = 'b'
 INVERTER_ID = 'i'
 EXTERNAL_SOURCE_ID = 's'
 
+PLUG_A_RELAY_NUMBER = 3
+PLUG_B_RELAY_NUMBER = 2
+EXTERNAL_POWER_RELAY_NUMBER = 1
+INVERTER_RELAY_NUMBER = 0
+
+
+
 STATE_ON = '1'
 STATE_OFF = '0'
+
+RELAY_STATUS = [STATE_OFF, STATE_OFF, STATE_ON, STATE_ON]
 
 
 def setupGpioDirection(gpios, gpiosNum):
@@ -67,29 +78,37 @@ def turnOffSwitch(*relay):
 
 
 def enablePlugA():
+    RELAY_STATUS[ PLUG_A_RELAY_NUMBER ] = STATE_ON
     turnOnSwitch(PLUG_A)
 
 def disablePlugA():
+    RELAY_STATUS[ PLUG_A_RELAY_NUMBER ] = STATE_OFF
     turnOffSwitch(PLUG_A)
 
 def enablePlugB():
+    RELAY_STATUS[ PLUG_B_RELAY_NUMBER ] = STATE_ON
     turnOnSwitch(PLUG_B)
 
 def disablePlugB():
+    RELAY_STATUS[ PLUG_B_RELAY_NUMBER ] = STATE_OFF
     turnOffSwitch(PLUG_B)
 
 
 
 def enableExternalPower():
+    RELAY_STATUS[ EXTERNAL_POWER_RELAY_NUMBER ] = STATE_ON
     turnOnSwitch(EXTERNAL_POWER)
 
 def disableExternalPower():
+    RELAY_STATUS[ EXTERNAL_POWER_RELAY_NUMBER ] = STATE_OFF
     turnOffSwitch(EXTERNAL_POWER)
 
 def enableInverter():
+    RELAY_STATUS[ INVERTER_RELAY_NUMBER ] = STATE_ON
     turnOnSwitch(INVERTER)
 
 def disableInverter():
+    RELAY_STATUS[ INVERTER_RELAY_NUMBER ] = STATE_OFF
     turnOffSwitch(INVERTER)
 
 
