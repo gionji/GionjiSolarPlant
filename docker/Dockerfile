@@ -10,4 +10,4 @@ RUN apt-get update \
 RUN pip3 install pymodbus losant-mqtt tornado eventlet pysqlite3
 
 
-ENTRYPOINT ["python3", "--version"]
+ENTRYPOINT ["python3", "main.py"]

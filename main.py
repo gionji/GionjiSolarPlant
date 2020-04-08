@@ -12,13 +12,17 @@ import sensors
 import chargeController
 
 
-data = dict()
-
 ACCESS_KEY    = 'eed2fd5b-8219-4b18-a858-cdf345185cd6'
 ACCESS_SECRET = '1d8c634d39551e13a6da838bfdc152cdc43e10362bca3a888cbfc2a411020dd3'
 DEVICE_ID     = '5e2ec7308eb4af0006ecd530'
 
 DELAY = 1.0
+
+## docker
+# docker run -e MY_USER=test -e MY_PASS=12345 ... <image-name> ...
+username = os.environ['MY_USER']
+password = os.environ['MY_PASS']
+
 
 
 # Construct Losant device
@@ -32,6 +36,7 @@ def connectToLosant():
     # Connect to Losant and leave the connection open
     global device
     device.connect(blocking=False)
+
 
 
 def packToDb(data):
@@ -58,16 +63,20 @@ def init():
     database.init()
 
 
+def calibrateCurrentSensors():
+    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
+    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
+    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
 
+
+
+data = dict()
 
 
 def main():
     print('Gionji Solar Plant')
-    connectToLosant()
 
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
-    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
+    connectToLosant()
     
     database.init()
 
@@ -105,9 +114,6 @@ def main():
         #  parsed to tuples
         data = packToDb( data )
 
-        ## Print data
-        # print( data )
-
         ## Add data to db
         database.add_data( data )
         
@@ -115,7 +121,6 @@ def main():
         #database.select_data_all()
 
         time.sleep( DELAY )
-
 
 
 
