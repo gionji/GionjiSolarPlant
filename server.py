@@ -8,15 +8,15 @@ import relayBox as rb
 class LastData( tornado.web.RequestHandler ):
     def get(self):
         #self.write("Hello, world")
-        
+
         self.write(database.getLastData())
 
 
 class Plugs( tornado.web.RequestHandler ):
     def get(self):
         self.write("plug_id: a b i e --- state: 0 1")
-    
-    
+
+
     def post(self):
         plug_id = self.get_argument('plug_id')
         state  = self.get_argument('state')
@@ -31,7 +31,7 @@ class Plugs( tornado.web.RequestHandler ):
             elif state == rb.STATE_OFF:
                 rb.disablePlugA()
                 print( "Turn off plug A" )
-        
+
         elif plug_id == rb.PLUG_B_ID:
             if state == rb.STATE_ON:
                 rb.enablePlugB()
@@ -48,7 +48,6 @@ class Plugs( tornado.web.RequestHandler ):
                 rb.disableInverter()
                 print( "Turn off plug invereter" )
 
-
         elif plug_id == rb.EXTERNAL_SOURCE_ID:
             if state == rb.STATE_ON:
                 rb.enableExternalPower()
@@ -57,7 +56,7 @@ class Plugs( tornado.web.RequestHandler ):
                 rb.disableExternalPower()
                 print( "Turn on solar panel" )
 
-        
+
 
 
 class User(tornado.web.RequestHandler):
