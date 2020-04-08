@@ -1,0 +1,6 @@
+pymodbus 
+losant-mqtt 
+tornado 
+eventlet 
+pysqlite3
+
