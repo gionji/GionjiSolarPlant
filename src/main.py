@@ -12,6 +12,78 @@ import sensors
 import chargeController
 
 
+######### da spostare in neogpio.py ####################
+
+INPUT = 'in'
+OUTPUT = 'out'
+HIGH = '1'
+LOW = '0'
+PATH_GPIO = '/sys/class/gpio/'
+
+def exportGpio( gpio ):
+    try:
+        f = open(PATH_GPIO + 'export' ,'w')
+        f.write(str(gpio))
+        f.flush()
+        f.close()
+    except Exception as e:
+        print("Error exporting gpio " + str(gpio) )
+
+    return 0
+
+
+def setDirection( gpio, direction ):
+    try:
+        f = open(PATH_GPIO + 'gpio' + str(gpio) + '/direction' ,'w')
+        f.write( str(direction) )
+        f.flush()
+        f.close()
+    except Exception as e:
+        print("Error setting gpio direction " + str(gpio) )
+
+    return 0
+
+
+def readValue( gpio ):
+    value = None
+    try:
+        f = open(PATH_GPIO + 'gpio' + str(gpio) + '/value' ,'r')
+        value = f.read( )
+        f.close()
+    except Exception as e:
+        print("Error reading gpio value " + str(gpio) )
+
+    return value
+
+def setValue( gpio, value ):
+    try:
+        f = open(PATH_GPIO + 'gpio' + str(gpio) + '/value' ,'w')
+        f.write( str(value) )
+        f.flush()
+        f.close()
+    except Exception as e:
+        print("Error setting gpio value " + str(gpio) )
+
+    return 0
+######################################################
+
+
+def initializeLed13():
+    exportGpio( 102 )
+    setDirection( 102, OUTPUT )
+    
+def turnOnLed():
+    setValue(102 , HIGH)
+
+def turnOffLed():
+    setValue(102, LOW)
+
+def blink13( howLong, howMany):
+    for i in range(0, howMany):
+        turnOnLed()
+        time.sleep(howLong)
+        turnOffLed()
+        time.sleep(howLong)
 
 
 def packToDb(data):
@@ -41,8 +113,11 @@ def calibrateCurrentSensors():
 
 
 def init():
+    initializeLed13()
     database.init()
+    relayBox.init()
     calibrateCurrentSensors()
+
 
 
 
@@ -79,17 +154,12 @@ def main():
             data['inverter_current'] = None
             print( e )
 
-
-        ## send data to losant
-    #    try:
-    #        sendDataToLosant(data)
-    #    except Exception as e:
-    #        print( e )
-
         ## Pack data to db
         #  To use the data in the sqlite query has to be parsed to tuples
         data = packToDb( data )
 
+
+        blinkLed(0.05, 4)
 
         ## Add data to db
         database.add_data( data )

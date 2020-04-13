@@ -1,12 +1,19 @@
+PATH_ADC_HOST = '/sys/bus/iio/devices/'
+PATH_ADC_CONTAINER = '/var/adc/'
 
+PATH_ADC = PATH_ADC_HOST
+
+'''
 A0 =  '/sys/bus/iio/devices/iio\:device0/in_voltage0_raw'
 A1 =  '/sys/bus/iio/devices/iio\:device0/in_voltage1_raw'
 A2 =  '/sys/bus/iio/devices/iio\:device0/in_voltage2_raw'
 A3 =  '/sys/bus/iio/devices/iio\:device0/in_voltage3_raw'
 A4 =  '/sys/bus/iio/devices/iio\:device1/in_voltage0_raw'
 A5 =  '/sys/bus/iio/devices/iio\:device1/in_voltage1_raw'
+'''
 
-ADC_FOLDER = '/var/adc/'
+
+ADC_FOLDER = PATH_ADC
 
 A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
 A1 = ADC_FOLDER + 'iio:device0/' + 'in_voltage1_raw'
