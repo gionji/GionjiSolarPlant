@@ -14,4 +14,6 @@ RUN pip3 install -r requirements.txt
 COPY ./src .
 COPY ./test .
 
-ENTRYPOINT ["python3", "test01.py"]
+RUN mkdir /var/data
+
+ENTRYPOINT ["python3", "main.py"]

@@ -217,7 +217,7 @@ def init():
     time.sleep(1)
 
     print("Set relays in their default states")
-    enablePlugA( PLUG_A )
+    enablePlugA( )
     enableInverter()
 
     print("Relaybox initilazation COMPLETE.")

@@ -2,7 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import datetime 
 
-DATABASE_PATH = r"./sqlite.db"
+DATABASE_PATH = r"/var/data/database.sqlite"
 
 
 

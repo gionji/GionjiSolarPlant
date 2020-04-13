@@ -1,5 +1,3 @@
-
-
 import os
 import json
 import datetime
@@ -10,6 +8,20 @@ import relayBox
 import database
 import sensors
 import chargeController
+
+
+
+'''
+username = os.environ['MY_USER']
+password = os.environ['MY_PASS']
+docker run -e MY_USER=test -e MY_PASS=12345 ... <image-name> ...
+'''
+
+if 'DELAY' in os.environ:
+    DELAY = os.environ['DELAY']
+else:
+    DELAY = 1.0
+
 
 
 ######### da spostare in neogpio.py ####################
@@ -78,7 +90,7 @@ def turnOnLed():
 def turnOffLed():
     setValue(102, LOW)
 
-def blink13( howLong, howMany):
+def blinkLed( howLong, howMany):
     for i in range(0, howMany):
         turnOnLed()
         time.sleep(howLong)
@@ -114,10 +126,16 @@ def calibrateCurrentSensors():
 
 def init():
     initializeLed13()
-    database.init()
-    relayBox.init()
-    calibrateCurrentSensors()
+    blinkLed(0.05, 4)
 
+    database.init()
+    blinkLed(0.05, 4)
+
+    relayBox.init()
+    blinkLed(0.05, 4)
+
+    calibrateCurrentSensors()
+    blinkLed(0.05, 4)
 
 
 
@@ -154,12 +172,15 @@ def main():
             data['inverter_current'] = None
             print( e )
 
+
+        print( data )
+
+
         ## Pack data to db
         #  To use the data in the sqlite query has to be parsed to tuples
         data = packToDb( data )
 
-
-        blinkLed(0.05, 4)
+        blinkLed(0.05, 2)
 
         ## Add data to db
         database.add_data( data )
