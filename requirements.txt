@@ -1,3 +1,4 @@
+numpy
 pymodbus 
 losant-mqtt 
 tornado 

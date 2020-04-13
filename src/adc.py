@@ -1,10 +1,21 @@
 
-A0 =  '/sys/bus/iio/devices/iio:device0/in_voltage0_raw'
-A1 =  '/sys/bus/iio/devices/iio:device0/in_voltage1_raw'
-A2 =  '/sys/bus/iio/devices/iio:device0/in_voltage2_raw'
-A3 =  '/sys/bus/iio/devices/iio:device0/in_voltage3_raw'
-A4 =  '/sys/bus/iio/devices/iio:device1/in_voltage0_raw'
-A5 =  '/sys/bus/iio/devices/iio:device1/in_voltage1_raw'
+A0 =  '/sys/bus/iio/devices/iio\:device0/in_voltage0_raw'
+A1 =  '/sys/bus/iio/devices/iio\:device0/in_voltage1_raw'
+A2 =  '/sys/bus/iio/devices/iio\:device0/in_voltage2_raw'
+A3 =  '/sys/bus/iio/devices/iio\:device0/in_voltage3_raw'
+A4 =  '/sys/bus/iio/devices/iio\:device1/in_voltage0_raw'
+A5 =  '/sys/bus/iio/devices/iio\:device1/in_voltage1_raw'
+
+ADC_FOLDER = '/var/adc/'
+
+A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
+A1 = ADC_FOLDER + 'iio:device0/' + 'in_voltage1_raw'
+A2 = ADC_FOLDER + 'iio:device0/' + 'in_voltage2_raw'
+A3 = ADC_FOLDER + 'iio:device0/' + 'in_voltage3_raw'
+A4 = ADC_FOLDER + 'iio:device1/' + 'in_voltage0_raw'
+A5 = ADC_FOLDER + 'iio:device1/' + 'in_voltage1_raw'
+
+
 
 DEFAULT_BURST_SIZE = 1024;
 

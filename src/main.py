@@ -33,10 +33,16 @@ def packToDb(data):
 
 
 
+def calibrateCurrentSensors():
+    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
+    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
+    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
+
+
 
 def init():
     database.init()
-
+    calibrateCurrentSensors()
 
 
 
@@ -45,13 +51,8 @@ data = dict()
 
 def main():
     print('Gionji Solar Plant')
-    connectToLosant()
-
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
-    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
-
-    database.init()
+    
+    init()
 
     while(True):
         global data
@@ -80,10 +81,10 @@ def main():
 
 
         ## send data to losant
-        try:
-            sendDataToLosant(data)
-        except Exception as e:
-            print( e )
+    #    try:
+    #        sendDataToLosant(data)
+    #    except Exception as e:
+    #        print( e )
 
         ## Pack data to db
         #  To use the data in the sqlite query has to be parsed to tuples
@@ -102,6 +103,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # application.listen(8888)
-    # tornado.ioloop.IOLoop.instance().start()
+    #application.listen(8888)
+    #tornado.ioloop.IOLoop.instance().start()
     main()

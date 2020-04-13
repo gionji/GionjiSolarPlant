@@ -1,7 +1,7 @@
 import time
 import numpy as np
-from scipy.fftpack import fft
-import matplotlib.pyplot as plt
+#from scipy.fftpack import fft
+#import matplotlib.pyplot as plt
 import platform
 import math
 

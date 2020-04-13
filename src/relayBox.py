@@ -4,13 +4,14 @@ import time
 GPIO_EXPORT   = '/sys/class/gpio/export'
 OS_PATH       = '/sys/class/gpio/gpio'
 UDUBUNTU_PATH = '/gpio/gpio'
+DOCKER_PATH  = '/var/gpio'
 
 RELAY_PCB_PIN  = [24, 25, 26, 27]
 RELAY_GPIO_NUM = [25, 22, 14, 15]
 
 
 GPIO      = RELAY_GPIO_NUM 
-GPIO_PATH = OS_PATH
+GPIO_PATH = DOCKER_PATH
 
 
 ## gpio files paths for each relay
@@ -22,20 +23,20 @@ RELAY = [ GPIO_PATH + str( GPIO[0] ) + '/',
 HIGH = '0'
 LOW  = '1'
 
-INVERTER = RELAY[0]
+INVERTER       = RELAY[0]
 EXTERNAL_POWER = RELAY[1]
-PLUG_B = RELAY[2]
-PLUG_A = RELAY[3]
+PLUG_B         = RELAY[2]
+PLUG_A         = RELAY[3]
 
-PLUG_A_ID = 'a'
-PLUG_B_ID = 'b'
-INVERTER_ID = 'i'
+PLUG_A_ID          = 'a'
+PLUG_B_ID          = 'b'
+INVERTER_ID        = 'i'
 EXTERNAL_SOURCE_ID = 's'
 
-PLUG_A_RELAY_NUMBER = 3
-PLUG_B_RELAY_NUMBER = 2
+PLUG_A_RELAY_NUMBER         = 3
+PLUG_B_RELAY_NUMBER         = 2
 EXTERNAL_POWER_RELAY_NUMBER = 1
-INVERTER_RELAY_NUMBER = 0
+INVERTER_RELAY_NUMBER       = 0
 
 
 
