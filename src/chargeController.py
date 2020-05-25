@@ -1,7 +1,9 @@
+## Epever Charge controller
+
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 
 BAUDRATE = 115200
-PORT = '/dev/ttyUSB0'
+PORT     = '/dev/ttyUSB0'
 
 def readAll():
     data = dict()
@@ -10,15 +12,14 @@ def readAll():
         print("Connect modbus...")
         client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
         client.connect()
-        # print( client)
 
         result = client.read_input_registers(0x3100, 15, unit=1)
         #result1 = client.read_input_registers(0x3300, 14, unit=1)
         result2 = client.read_input_registers(0x3110, 2, unit=1)
-        result3 = client.read_input_registers(0x311,15,unit=1)
-        result4 = client.read_input_registers(0x3200,15,unit=1)
+        result3 = client.read_input_registers(0x311, 15, unit=1)
+        result4 = client.read_input_registers(0x3200,15, unit=1)
 
-        #data['date'] = datetime.datetime.now()    
+        #data['date'] = datetime.datetime.now()
         data['panelVoltage']       = float(result.registers[0] / 100.0)
         data['panelCurrent']       = float(result.registers[1] / 100.0)
         data['batteryVoltage']     = float(result.registers[4] / 100.0)
