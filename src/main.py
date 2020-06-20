@@ -3,13 +3,20 @@ import json
 import datetime
 import time
 
+import sys
+sys.path.insert(0, "..")
+import logging
+import random
+from opcua import ua, Server, uamethod
+import EpeverChargeController as cc
+
 import currentMonitor
 import relayBox
-import database
 import sensors
-import chargeController
 
-
+DUMMY_DATA    = True
+OPC_ENDPOINT  = "opc.tcp://0.0.0.0:4840/freeopcua/server/"
+OPC_NAMESPACE = "http://examples.freeopcua.github.io"
 
 '''
 username = os.environ['MY_USER']
@@ -80,15 +87,17 @@ def setValue( gpio, value ):
 ######################################################
 
 
+LED_13_GPIO_NUMBER = 102
+
 def initializeLed13():
-    exportGpio( 102 )
-    setDirection( 102, OUTPUT )
-    
+    exportGpio( LED_13_GPIO_NUMBER )
+    setDirection( LED_13_GPIO_NUMBER , OUTPUT )
+
 def turnOnLed():
-    setValue(102 , HIGH)
+    setValue(LED_13_GPIO_NUMBER , HIGH)
 
 def turnOffLed():
-    setValue(102, LOW)
+    setValue(LED_13_GPIO_NUMBER , LOW)
 
 def blinkLed( howLong, howMany):
     for i in range(0, howMany):
@@ -98,37 +107,18 @@ def blinkLed( howLong, howMany):
         time.sleep(howLong)
 
 
-def packToDb(data):
-    ret = (
-        data['panelVoltage'],
-        data['panelCurrent'],
-        data['batteryVoltage'],
-        data['batteryCurrent'],
-        data['loadVoltage'],
-        data['loadCurrent'],
-        data['inPower'],
-        data['outPower'],
-        data['plug_1_current'],
-        data['plug_2_current'],
-        data['inverter_current'],
-        data['irradiation']
-            )
-    return ret
-
-
 
 def calibrateCurrentSensors():
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
-    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
-
+    try:
+        currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
+        currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
+        currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
+    except Exception as e:
+        print( e )
 
 
 def init():
     initializeLed13()
-    blinkLed(0.05, 4)
-
-    database.init()
     blinkLed(0.05, 4)
 
     relayBox.init()
@@ -138,21 +128,70 @@ def init():
     blinkLed(0.05, 4)
 
 
-
-data = dict()
+# method to be exposed through server
+def set_plug_state(parent, variant):
+    ret = False
+    if variant.Value % 2 == 0:
+        ret = True
+    return [ua.Variant(ret, ua.VariantType.Boolean)]
 
 
 def main():
     print('Gionji Solar Plant')
-    
+
     init()
 
+    # setup our server
+    server = Server()
+    server.set_endpoint( OPC_ENDPOINT )
+
+    # setup our own namespace, not really necessary but should as spec
+    server_namespace =  OPC_NAMESPACE
+    address_space = server.register_namespace(server_namespace)
+
+    # get Objects node, this is where we should put our custom stuff
+    objects_node = server.get_objects_node()
+
+    # populating our address space
+    ChargeControllerObject = objects_node.add_object(address_space, "ChargeController")
+    RelayBoxObject         = objects_node.add_object(address_space, "RelayBox")
+
+    panelVoltage       = ChargeControllerObject.add_variable(address_space, "panelVoltage", 0.0)
+    panelCurrent       = ChargeControllerObject.add_variable(address_space, "panelCurrent", 0.0)
+    batteryVoltage     = ChargeControllerObject.add_variable(address_space, "batteryVoltage", 0.0)
+    batteryCurrent     = ChargeControllerObject.add_variable(address_space, "batteryCurrent", 0.0)
+    loadVoltage        = ChargeControllerObject.add_variable(address_space, "loadVoltage", 0.0)
+    loadCurrent        = ChargeControllerObject.add_variable(address_space, "loadCurrent", 0.0)
+    inPower            = ChargeControllerObject.add_variable(address_space, "inPower", 0.0)
+    outPower           = ChargeControllerObject.add_variable(address_space, "outPower", 0.0)
+    batteryStatus      = ChargeControllerObject.add_variable(address_space, "batteryStatus", "")
+    batteryCapacity    = ChargeControllerObject.add_variable(address_space, "batteryCapacity", 0.0)
+    batteryTemperature = ChargeControllerObject.add_variable(address_space, "batteryTemperature", 0.0)
+
+    plug1Current       = RelayBoxObject.add_variable(address_space, "plug_1_current", 0.0)
+    plug2Current       = RelayBoxObject.add_variable(address_space, "plug_2_current", 0.0)
+    inverterCurrent    = RelayBoxObject.add_variable(address_space, "inverter_current", 0.0)
+
+
+    inverter_control_node = RelayBoxObject.add_method( address_space,
+                                                       "set_plug_state",
+                                                       set_plug_state,
+                                                       [ua.VariantType.Int32, ua.VariantType.Boolean],
+                                                       [ua.VariantType.Boolean]
+                                                      )
+
+    # starting!
+    server.start()
+    print("Server starting ...")
+
+    # creating my machinery objects
+    chargeController = cc.EpeverChargeController(produce_dummy_data=DUMMY_DATA)
+
     while(True):
-        global data
         data = dict()
 
-        ## Read Charge Controller Data
-        data = chargeController.readAll()
+        ## Read data from hardware machines
+        data = chargeController.readAllData()
 
         ## Read Irradiation data
         try:
@@ -172,21 +211,25 @@ def main():
             data['inverter_current'] = None
             print( e )
 
-
         print( data )
 
+        panelVoltage.set_value(data['panelVoltage'])
+        panelCurrent.set_value(data['panelCurrent'])
+        batteryVoltage.set_value(data['batteryVoltage'])
+        batteryCurrent.set_value(data['batteryCurrent'])
+        loadVoltage.set_value(data['loadVoltage'])
+        loadCurrent.set_value(data['loadCurrent'])
+        inPower.set_value(data['inPower'])
+        outPower.set_value(data['outPower'])
+        batteryStatus.set_value(data['batteryStatus'])
+        batteryCapacity.set_value(data['batteryCapacity'])
+        batteryTemperature.set_value(data['batteryTemperature'])
 
-        ## Pack data to db
-        #  To use the data in the sqlite query has to be parsed to tuples
-        data = packToDb( data )
+        plug1Current.set_value(data['plug_1_current'])
+        plug2Current.set_value(data['plug_2_current'])
+        inverterCurrent.set_value(data['inverter_current'])
 
         blinkLed(0.05, 2)
-
-        ## Add data to db
-        database.add_data( data )
-
-        ## select all data
-        #database.select_data_all()
 
         time.sleep( DELAY )
 
