@@ -131,7 +131,10 @@ def init():
 # method to be exposed through server
 def set_plug_state(parent, variant):
     ret = False
-    if variant.Value % 2 == 0:
+
+    print(variant)
+
+    if variant.Value:
         ret = True
     return [ua.Variant(ret, ua.VariantType.Boolean)]
 
