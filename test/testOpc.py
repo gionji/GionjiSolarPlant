@@ -2,6 +2,7 @@ import sys
 sys.path.insert(0, "..")
 import logging
 import time
+import random
 
 try:
     from IPython import embed
@@ -85,10 +86,22 @@ if __name__ == "__main__":
         # sub.delete()
 
         # calling a method on server
-        res = obj.call_method( "{}:set_plug_state".format(idx), 
-                [ua.Variant(1, ua.VariantType.UInt32), ua.Variant(True, ua.VariantType.Boolean)]
-            )
-        print("method result is: ", res)
+        while True:
+            time.sleep(1)
+            plug = random.randint(0, 3)
+            state = random.choice([True, False])
+            try:
+                res = obj.call_method( "{}:set_plug_state".format(idx),
+                    [
+                        ua.Variant(plug,  ua.VariantType.UInt32),
+                        ua.Variant(state, ua.VariantType.Boolean)
+                    ]
+                )
+                print("method result is: ["+ str(plug)+"  "+ str(state)+"] ", res)
+            except:
+                print('do nothing...')
+
+
 
         embed()
     finally:

@@ -8,10 +8,10 @@ sys.path.insert(0, "..")
 import logging
 import random
 from opcua import ua, Server, uamethod
-import EpeverChargeController as cc
 
+import EpeverChargeController as cc
+import relayBox as rb
 import currentMonitor
-import relayBox
 import sensors
 
 DUMMY_DATA    = True
@@ -29,7 +29,7 @@ if 'DELAY' in os.environ:
 else:
     DELAY = 1.0
 
-
+#RELAY_STATE = [False, False, False, False]
 
 ######### da spostare in neogpio.py ####################
 
@@ -106,7 +106,7 @@ def blinkLed( howLong, howMany):
         turnOffLed()
         time.sleep(howLong)
 
-
+#####################################################
 
 def calibrateCurrentSensors():
     try:
@@ -128,21 +128,31 @@ def init():
     blinkLed(0.05, 4)
 
 
-# method to be exposed through server
-def set_plug_state(parent, variant):
+relay_box = None
+
+## method to be exposed through server
+def set_plug_state(parent, args):
     ret = False
 
-    print(variant)
+    plug = args.Value[0].Value
+    state = args.Value[1].Value
 
-    if variant.Value:
-        ret = True
-    return [ua.Variant(ret, ua.VariantType.Boolean)]
+    if plug in range(0,4):
+        print("Plug: " + str(plug) + "  to state: " + str(state) )
+        ret = relay_box.setRelayState(plug, state)
+    else:
+        print("PlugId is wrong, has to be integer in range 0 ... 3 . not " + str(plug) )
+
+    print("opc method answer: " + str(ret))
+    return [ua.Variant(ret, ua.VariantType.Boolean )]
 
 
 def main():
     print('Gionji Solar Plant')
 
-    init()
+    global relay_box
+    relay_box = rb.RelayBox()
+    # init()
 
     # setup our server
     server = Server()
@@ -175,12 +185,11 @@ def main():
     plug2Current       = RelayBoxObject.add_variable(address_space, "plug_2_current", 0.0)
     inverterCurrent    = RelayBoxObject.add_variable(address_space, "inverter_current", 0.0)
 
-
     inverter_control_node = RelayBoxObject.add_method( address_space,
                                                        "set_plug_state",
                                                        set_plug_state,
-                                                       [ua.VariantType.Int32, ua.VariantType.Boolean],
-                                                       [ua.VariantType.Boolean]
+                                                       [ ua.VariantType.Int32, ua.VariantType.Boolean ],
+                                                       [ ua.VariantType.Boolean, ua.VariantType.Boolean,ua.VariantType.Boolean,ua.VariantType.Boolean ]
                                                       )
 
     # starting!
@@ -201,7 +210,7 @@ def main():
             data['irradiation']      = sensors.getIrradiation()
         except Exception as e:
             data['irradiation']      = None
-            print( e )
+            #print( e )
 
         ## Read currents
         try:
@@ -212,9 +221,9 @@ def main():
             data['plug_1_current']   = None
             data['plug_2_current']   = None
             data['inverter_current'] = None
-            print( e )
+            #print( e )
 
-        print( data )
+        #print( data )
 
         panelVoltage.set_value(data['panelVoltage'])
         panelCurrent.set_value(data['panelCurrent'])
@@ -232,7 +241,7 @@ def main():
         plug2Current.set_value(data['plug_2_current'])
         inverterCurrent.set_value(data['inverter_current'])
 
-        blinkLed(0.05, 2)
+        #blinkLed(0.05, 2)
 
         time.sleep( DELAY )
 
