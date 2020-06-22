@@ -8,46 +8,36 @@ class BoardType:
     C23 = 0x02
 
 class OsType:
-    UBUNTU_1804 = 0x11
+    UBUNTU_1804   = 0x11
     UDUBUNTU_1404 = 0x12
-    DOCKER = 0x13
+    DOCKER        = 0x13
 
 ###########################################################
-# Relay numbers
-PLUG_A_RELAY_NUMBER         = 3
-PLUG_B_RELAY_NUMBER         = 2
-EXTERNAL_POWER_RELAY_NUMBER = 1
-INVERTER_RELAY_NUMBER       = 0
+
 
 osType = OsType.UBUNTU_1804
 boardType = BoardType.NEO
+
+
 ###############################################################3
 
 PATH_GPIO_UBUNTU    = '/sys/class/gpio/'
 PATH_GPIO_UDOOBUNTU = '/gpio/'
 PATH_GPIO_CONTAINER = '/var/gpio/'
 
-GPIO_EXPORT_FILE     = 'export'
-GPIO_FOLDER_BASENAME = 'gpio'
+
+NEO_GPIOS = [
+                (24, 25),
+                (25, 22),
+                (26, 14),
+                (27, 15),        
+            ]
+
 
 # pins numbers printend on the Udoo Neo PCB
 RELAY_PCB_NUMBER_NEO  = [24, 25, 26, 27]
 # correspondent gpio kernel numbers
 RELAY_GPIO_NUMBER_NEO = [25, 22, 14, 15]
-
-# gpios output or input values
-HIGH = True
-LOW  = False
-
-# on and of states
-ON  = HIGH
-OFF = LOW
-
-# string literal label for each relay
-PLUG_A_ID          = 'a'
-PLUG_B_ID          = 'b'
-INVERTER_ID        = 'i'
-EXTERNAL_SOURCE_ID = 's'
 
 ###################################################
 
@@ -62,27 +52,92 @@ if boardType == BoardType.NEO:
     RELAY_GPIO_NUMBER = RELAY_GPIO_NUMBER_NEO
 
 
-# Array with correspondant gpio number for each relay
-GPIO      = RELAY_GPIO_NUMBER
+class Relay:
 
-# gpio path plus folder basename
-GPIO_PATH   = PATH_GPIO + GPIO_FOLDER_BASENAME
-GPIO_EXPORT = PATH_GPIO + GPIO_EXPORT_FILE
+    name               = None
+    id                 = None
 
-## gpio files paths for each relay
-# a RELAY is identified with its gpio folder path
-RELAY_FOLDER_PATH = [
-    GPIO_PATH + str( GPIO[0] ) + '/',
-    GPIO_PATH + str( GPIO[1] ) + '/',
-    GPIO_PATH + str( GPIO[2] ) + '/',
-    GPIO_PATH + str( GPIO[3] ) + '/',
-]
+    gpio_kernel_number = None
+    export_path        = None
+    gpio_path          = None
 
-# realy function associated with gpio os path
-INVERTER       = RELAY_FOLDER_PATH[ INVERTER_RELAY_NUMBER ]
-EXTERNAL_POWER = RELAY_FOLDER_PATH[ EXTERNAL_POWER_RELAY_NUMBER ]
-PLUG_B         = RELAY_FOLDER_PATH[ PLUG_B_RELAY_NUMBER ]
-PLUG_A         = RELAY_FOLDER_PATH[ PLUG_A_RELAY_NUMBER ]
+    state              = False
+
+    def __init__( self , name : str, id : int, gpio_kernel_number : int, gpio_path_basename : str ):
+        self.name = name
+        self.id   = id
+
+        self.gpio_kernel_number = gpio_kernel_number
+        self.export_path        = gpio_path_basename + 'export'
+        self.gpio_path          = gpio_path_basename + 'gpio/' + str(self.gpio_kernel_number) + '/'
+
+        self.initialize_hardware()
+
+
+    def initialize_hardware(self):
+        try:
+            f = open( self.export_path, 'w+')
+            f.write( str(self.gpio_kernel_number) )
+            f.flush()
+            f.close()
+        except:
+            print( 'Error exporting gpio ' + str(self.gpio_kernel_number) )
+
+        try:
+            f = open( self.gpio_path + 'direction' , "w+")
+            f.write('out')
+            f.flush()
+            f.close()
+        except:
+            print( 'Error setting direction gpio ' + str( self.gpio_kernel_number ) )
+
+
+    def get_state(self):
+        return self.state
+
+    def turn_on(self):
+        try:
+            f = open( self.gpio_path + 'value' , "w+")
+            f.write('1')
+            f.flush()
+            f.close()
+            self.state = True
+        except:
+            print( 'Error setting value gpio ' + str( self.gpio_kernel_number ) )
+
+        return self.state
+
+
+    def turn_off(self):
+        try:
+            f = open( self.gpio_path + 'value' , "w+")
+            f.write('0')
+            f.flush()
+            f.close()
+            self.state = False
+        except:
+            print( 'Error setting value gpio ' + str( self.gpio_kernel_number ) )
+
+        return self.state
+
+
+    def set_state(self, state : bool):
+        if state:
+            val = '1'
+        else:
+            val = '0'
+        
+        try:
+            f = open( self.gpio_path + 'value' , "w+")
+            f.write('val')
+            f.flush()
+            f.close()
+            self.state = state
+        except:
+            print( 'Error setting value gpio ' + str( self.gpio_kernel_number ) )
+
+        return self.state
+
 
 
 
@@ -90,124 +145,65 @@ PLUG_A         = RELAY_FOLDER_PATH[ PLUG_A_RELAY_NUMBER ]
 class RelayBox:
 
     ## Relays status
-    relay_status = [OFF, OFF, ON, ON]
+    relays    = None
+    gpio_path = None
+
 
     def __init__(self, boardType = BoardType.NEO, osType = OsType.UBUNTU_1804):
-
-        print("Initialize GPIOs. Export and set direction ...")
-        self.setupGpioDirection( GPIO )
-
         self.__setLocalPaths(boardType, osType)
+        self.relays = dict()
 
-        ## set initial relay states
-        print("Switch off all the relays ...")
-        self.turnOffAllRelays( )
-        time.sleep(1)
 
-        print("Set relays in their default states")
+    def add_relay(self, name : str, id : int,  gpio_number : int):
+        relay  = Relay ( name , 
+                                id, 
+                                gpio_kernel_number = gpio_number, 
+                                gpio_path_basename = str(self.gpio_path) 
+                              )
+        self.relays[ name ] = relay
 
-        print("Relaybox initilazation COMPLETE.")
 
 
     def __setLocalPaths(self, boardType, osType):
         if osType == OsType.UBUNTU_1804:
-            PATH_GPIO = PATH_GPIO_UBUNTU
+            self.gpio_path = PATH_GPIO_UBUNTU
         elif osType == OsType.UDUBUNTU_1404:
-            PATH_GPIO = PATH_GPIO_UDOOBUNTU
+            self.gpio_path = PATH_GPIO_UDOOBUNTU
         elif osType == OsType.DOCKER:
-            PATH_GPIO = PATH_GPIO_CONTAINER
+            self.gpio_path = PATH_GPIO_CONTAINER
 
         if boardType == BoardType.NEO:
-            RELAY_GPIO_NUMBER = RELAY_GPIO_NUMBER_NEO
+            None
 
-
-
-    def setupGpioDirection(self, gpiosNum):
-
-        # export all the relaybox gpios
-        for elem in gpiosNum:
-            try:
-                f = open(GPIO_EXPORT, 'w+')
-                f.write( elem )
-                f.flush()
-                f.close()
-            except:
-                print( 'Error exporting gpio ' + str(elem) )
-
-        # set the gpios in output
-        for elem in gpiosNum:
-            try:
-                f = open( GPIO_PATH + str(elem) + '/direction' , "w+")
-                f.write('out')
-                f.flush()
-                f.close()
-            except:
-                print( 'Error setting direction gpio ' + str(elem) )
-
-
-
-    def __turnOnSwitch(self, *relay):
-        for elem in relay:
-            f = open( elem + 'value' , "w+")
-            f.write( HIGH )
-            f.flush()
-            f.close()
-
-
-
-    def __turnOffSwitch(self, *relay):
-        for elem in relay:
-            f = open( elem + 'value' , "w+")
-            f.write( LOW )
-            f.flush()
-            f.close()
-
-
-    def turnOffAllRelays(self):
-        for i in range(0,3):
-            try:
-                f = open( RELAY_FOLDER_PATH[i] + 'value' , "w+")
-                f.write( LOW )
-                f.flush()
-                f.close()
-                self.relay_status[ i ] = OFF
-            except Exception as e:
-                print("Error switching relay: " +str(e))
-        return self.relay_status
-
-
-    def turnOnAllRelays(self):
-        for i in range(0,3):
-            try:
-                f = open( RELAY_FOLDER_PATH[i] + 'value' , "w+")
-                f.write( HIGH )
-                f.flush()
-                f.close()
-                self.relay_status[ i ] = ON
-            except Exception as e:
-                print("Error switching relay: " +str(e))
-        return self.relay_status
-
-
-    def setRelayState(self, relay_id, state):
-        if state:
-            state = ON
-        else:
-            state = OFF
-
+    def turn_on(self, name):
         try:
-            f = open( RELAY_FOLDER_PATH[relay_id] + 'value' , "w+")
-            f.write( state )
-            f.flush()
-            f.close()
-            self.relay_status[ relay_id ] = state
-            print('RelayBox: ' + str(self.relay_status))
+            return self.relays[ name ].turn_on()
         except Exception as e:
-            print("Error switching...")
-        finally:
-            return self.relay_status
+            return None
+            print( e )
+
+    def turn_off(self, name):
+        try:
+            return self.relays[ name ].turn_off()
+        except Exception as e:
+            return None
+            print( e )
+
+    def get_relays(self):
+        return self.relays
 
 
+    def remove_all_relays(self):
+        self.relays = dict()
+
+
+
+#################################################################################
+
+      
+
+#################################################################################
+    '''
     def enablePlugA(self):
         try:
             __turnOnSwitch(PLUG_A)
@@ -288,3 +284,5 @@ class RelayBox:
             print("Error disbling Inverter")
 
         return self.relay_status
+
+    '''

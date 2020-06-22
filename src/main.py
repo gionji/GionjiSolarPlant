@@ -14,7 +14,7 @@ import relayBox as rb
 import currentMonitor
 import sensors
 
-DUMMY_DATA    = True
+DUMMY_DATA    = False
 OPC_ENDPOINT  = "opc.tcp://0.0.0.0:4840/freeopcua/server/"
 OPC_NAMESPACE = "http://examples.freeopcua.github.io"
 
@@ -117,15 +117,20 @@ def calibrateCurrentSensors():
         print( e )
 
 
+
+
+
+
+
+
 def init():
     initializeLed13()
-    blinkLed(0.05, 4)
-
-    relayBox.init()
-    blinkLed(0.05, 4)
+    # blinkLed(0.05, 4)
 
     calibrateCurrentSensors()
-    blinkLed(0.05, 4)
+    # blinkLed(0.05, 4)
+
+
 
 
 relay_box = None
@@ -147,12 +152,17 @@ def set_plug_state(parent, args):
     return [ua.Variant(ret, ua.VariantType.Boolean )]
 
 
+
+
+
+
 def main():
     print('Gionji Solar Plant')
 
     global relay_box
     relay_box = rb.RelayBox()
-    # init()
+    relay_box.add_relay('cane', 0, 25)
+    init()
 
     # setup our server
     server = Server()
@@ -168,6 +178,8 @@ def main():
     # populating our address space
     ChargeControllerObject = objects_node.add_object(address_space, "ChargeController")
     RelayBoxObject         = objects_node.add_object(address_space, "RelayBox")
+
+    opc_variables = dict()
 
     panelVoltage       = ChargeControllerObject.add_variable(address_space, "panelVoltage", 0.0)
     panelCurrent       = ChargeControllerObject.add_variable(address_space, "panelCurrent", 0.0)
@@ -185,6 +197,10 @@ def main():
     plug2Current       = RelayBoxObject.add_variable(address_space, "plug_2_current", 0.0)
     inverterCurrent    = RelayBoxObject.add_variable(address_space, "inverter_current", 0.0)
 
+    irradiation =  ChargeControllerObject.add_variable(address_space, "irradiation", 0.0)
+
+
+
     inverter_control_node = RelayBoxObject.add_method( address_space,
                                                        "set_plug_state",
                                                        set_plug_state,
@@ -200,49 +216,51 @@ def main():
     chargeController = cc.EpeverChargeController(produce_dummy_data=DUMMY_DATA)
 
     while(True):
+
+        print( relay_box.get_relays() )
+
         data = dict()
 
         ## Read data from hardware machines
-        data = chargeController.readAllData()
-
+        try:
+            data = chargeController.readAllData()
+            panelVoltage.set_value(data['panelVoltage'])
+            panelCurrent.set_value(data['panelCurrent'])
+            batteryVoltage.set_value(data['batteryVoltage'])
+            batteryCurrent.set_value(data['batteryCurrent'])
+            loadVoltage.set_value(data['loadVoltage'])
+            loadCurrent.set_value(data['loadCurrent'])
+            inPower.set_value(data['inPower'])
+            outPower.set_value(data['outPower'])
+            # batteryStatus.set_value(data['batteryStatus'])
+            # batteryCapacity.set_value(data['batteryCapacity'])
+            batteryTemperature.set_value(data['batteryTemperature'])
+        except Exception as e:
+            print( e )
+        
         ## Read Irradiation data
         try:
             data['irradiation']      = sensors.getIrradiation()
+            irradiation.set_value(data['irradiation'])
         except Exception as e:
-            data['irradiation']      = None
-            #print( e )
+            print( e )
 
         ## Read currents
         try:
             data['plug_1_current']   = currentMonitor.getCurrentPlug1()
             data['plug_2_current']   = currentMonitor.getCurrentPlug2()
             data['inverter_current'] = currentMonitor.getCurrentInverter()
+            plug1Current.set_value(data['plug_1_current'])
+            plug2Current.set_value(data['plug_2_current'])
+            inverterCurrent.set_value(data['inverter_current'])
         except Exception as e:
-            data['plug_1_current']   = None
-            data['plug_2_current']   = None
-            data['inverter_current'] = None
-            #print( e )
+            print( e )
 
-        #print( data )
 
-        panelVoltage.set_value(data['panelVoltage'])
-        panelCurrent.set_value(data['panelCurrent'])
-        batteryVoltage.set_value(data['batteryVoltage'])
-        batteryCurrent.set_value(data['batteryCurrent'])
-        loadVoltage.set_value(data['loadVoltage'])
-        loadCurrent.set_value(data['loadCurrent'])
-        inPower.set_value(data['inPower'])
-        outPower.set_value(data['outPower'])
-        batteryStatus.set_value(data['batteryStatus'])
-        batteryCapacity.set_value(data['batteryCapacity'])
-        batteryTemperature.set_value(data['batteryTemperature'])
-
-        plug1Current.set_value(data['plug_1_current'])
-        plug2Current.set_value(data['plug_2_current'])
-        inverterCurrent.set_value(data['inverter_current'])
+        print( json.dumps(data) )
 
         #blinkLed(0.05, 2)
-
+        
         time.sleep( DELAY )
 
 

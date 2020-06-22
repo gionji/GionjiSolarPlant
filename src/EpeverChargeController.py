@@ -47,31 +47,84 @@ class EpeverChargeController:
             result  = client.read_input_registers(0x3100, 15, unit=1)
             result1 = client.read_input_registers(0x3300, 14, unit=1)
             result2 = client.read_input_registers(0x3110, 2, unit=1)
-            result3 = client.read_input_registers(0x311, 15, unit=1)
-            result4 = client.read_input_registers(0x3200,15, unit=1)
+            #result3 = client.read_input_registers(0x311, 15, unit=1)
+            #result4 = client.read_input_registers(0x3200,15, unit=1)
         except Exception as e:
             err = 'Error in Modbus reading registers: ' + str(e)
             print( err )
 
-            data = dict()
+        '''
+        baseReg = [ (0x3100, 15),
+                    (0x3300, 14),
+                    (0x3110,  2),
+                    (0x311, 15),
+                    (0x3200, 15)
+                  ]
+
+        for i in baseReg:
+            try:
+                client.read_input_registers(i[0], i[1], unit=1).registers[0]
+            except:
+                print( i )
+        '''
+
+        data = dict()
 
         try:
             #data['timestamp']          = datetime.datetime.now()
             data['panelVoltage']       = float(result.registers[0] / 100.0)
+        except:
+            None
+
+        try:            
             data['panelCurrent']       = float(result.registers[1] / 100.0)
+        except:
+            None
+
+        try:
             data['batteryVoltage']     = float(result.registers[4] / 100.0)
+        except:
+            None
+
+        try:
             data['batteryCurrent']     = float(result.registers[5] / 100.0)
+        except:
+            None
+
+        try:
             data['loadVoltage']        = float(result.registers[12] / 100.0)
+        except:
+            None
+
+        try:
             data['loadCurrent']        = float(result.registers[13] / 100.0)
+        except:
+            None
+
+        try:
             data['inPower']            = data['panelVoltage'] * data['panelCurrent']
+        except:
+            None
+
+        try:
             data['outPower']           = data['loadVoltage']  * data['loadCurrent']
+        except:
+            None
+
+        try:
             data['batteryTemperature'] = float(result2.registers[0] / 100)
+        except:
+            None
+
+        try:
             data['batteryCapacity']    = float(result3.registers[10] /100)
+        except:
+            None
+
+        try:
             data['batteryStatus']      = (result4.registers[0])
-        except Exception as e:
-            data = None
-            err = 'Error parsing Modbus readings: ' + str(e)
-            print( err )
+        except:
+            None
 
         return data
 

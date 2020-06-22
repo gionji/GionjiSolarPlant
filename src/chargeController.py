@@ -42,7 +42,8 @@ def readAll():
         data['outPower']        = None
         data['batteryCapacity'] = None
         data['batteryStatus']   = None
-        print(e)
+        data['batteryTemperature'] = None
+        print('[chargeController.py.readAll()]' + str(e) )
     return data
 
 
