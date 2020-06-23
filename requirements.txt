@@ -1,14 +1,11 @@
-numpy
 pymodbus 
+freeopcua
 losant-mqtt 
 tornado 
 eventlet 
 pysqlite3
-freeopcua
-pymodbus
 mosquito
 paho-mqtt
-python-etcd
 adafruit-io
 pymongo
 

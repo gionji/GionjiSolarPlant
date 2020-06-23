@@ -1,19 +1,19 @@
-FROM ubuntu:18.04 
+FROM python:3.7-alpine
 
-RUN apt update 
 
-RUN apt install -y python3-pip python3-dev \
-  && cd /usr/local/bin \
-  && ln -s /usr/bin/python3 python \
-  && pip3 install --upgrade pip
+COPY requirements.txt .
 
-COPY requirements.txt requirements.txt 
+RUN apk add --no-cache --virtual .build-deps \
+    build-base openssl-dev pkgconfig libffi-dev \
+    cups-dev jpeg-dev && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apk del .build-deps # delete the .build-deps in the same layer
 
-RUN pip3 install -r requirements.txt
+RUN reset
 
 COPY ./src .
 COPY ./test .
 
 RUN mkdir /var/data
 
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["python", "main.py"]
