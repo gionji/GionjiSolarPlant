@@ -11,7 +11,7 @@ LM75_CONF_OS_COMP_INT = 1
 LM75_CONF_OS_POL = 2
 LM75_CONF_OS_F_QUE = 3
 
-class LM75(object):
+class TemperatureBrick(object):
     def __init__(self, mode=LM75_CONF_OS_COMP_INT, address=LM75_ADDRESS, busnum=1):
         self._mode = mode
         self._address = address
@@ -23,11 +23,7 @@ class LM75(object):
     def toFah(self, temp):
         return (temp * (9.0/5.0)) + 32.0
 
-    def getTemp(self):
+    def getTemperature(self):
         raw = self._bus.read_word_data(self._address, LM75_TEMP_REGISTER) & 0xFFFF
         raw = ((raw << 8) & 0xFF00) + (raw >> 8)
         return self.regdata2float(raw)
-
-
-sensor = LM75()
-print(sensor.getTemp())
