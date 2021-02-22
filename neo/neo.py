@@ -2,6 +2,20 @@ import smbus
 import time
 
 
+
+INPUT = 'in'
+OUTPUT = 'out'
+HIGH = '1'
+LOW = '0'
+
+A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
+A1 = ADC_FOLDER + 'iio:device0/' + 'in_voltage1_raw'
+A2 = ADC_FOLDER + 'iio:device0/' + 'in_voltage2_raw'
+A3 = ADC_FOLDER + 'iio:device0/' + 'in_voltage3_raw'
+A4 = ADC_FOLDER + 'iio:device1/' + 'in_voltage0_raw'
+A5 = ADC_FOLDER + 'iio:device1/' + 'in_voltage1_raw'
+
+
 class TemperatureBrick(object):
 
     LM75_ADDRESS = 0x48
@@ -139,34 +153,40 @@ class BarometricBrick(object):
 
 
 
-class UdooNeo( object ):
-
-    def __init__(self):
-        print("Init the UdooNeo")
-
-
-    gpios = [ "178", "179", "104", "143", "142", "141", "140", "149", #J4in
+gpios = [ "178", "179", "104", "143", "142", "141", "140", "149", #J4in
                 "105", "148", "146", "147", "100", "102", #J6 in
                 "106", "107", "180", "181", "172", "173", "182", "124", #J4 out
                 "25",  "22",  "14",  "15",  "16",  "17", "18",   "19",  "20",  "21",
                 "203", "202", "177", "176", "175", "174",
                 "119", "124", "127", "116",   "7",   "6",   "5",   "4"]
 
-    gpios_J4_in  = { '0'  : 178, '1'  : 179, '2'  : 104, '3'  : 143, '4'  : 142, '5'  : 141, '6'  : 140, '7'  : 149 }
-    gpios_J4_out = { '16' : 106, '17' : 107, '18' : 180, '19' : 181, '20' : 172, '21' : 173, '22' : 182, '23' : 124 }
-    gpios_J6_in  = { '8'  : 105, '9'  : 148, '10' : 146, '11' : 147, '12' : 100, '13' : 102 }
-    gpios_J6_out = { '24' : 25,  '25' : 22,  '26' : 14,  '27' : 15,  '28' : 16,  '29' : 17, '30' : 18,   '31' : 19, '32' : 20, '33' : 21 }
-    gpios_J5_out = { '34' : 203, '35' : 202, '36' : 177, '37' : 176, '38' : 175, '39' : 174 }
-    gpios_J7_out = { '40' : 119, '41' : 124, '42' : 127, '43' : 116, '44' : 7,   '45' : 6, '46' : 5, '47' : 4 }
+gpios_J4_in  = { '0'  : 178, '1'  : 179, '2'  : 104, '3'  : 143, '4'  : 142, '5'  : 141, '6'  : 140, '7'  : 149 }
+gpios_J4_out = { '16' : 106, '17' : 107, '18' : 180, '19' : 181, '20' : 172, '21' : 173, '22' : 182, '23' : 124 }
+gpios_J6_in  = { '8'  : 105, '9'  : 148, '10' : 146, '11' : 147, '12' : 100, '13' : 102 }
+gpios_J6_out = { '24' : 25,  '25' : 22,  '26' : 14,  '27' : 15,  '28' : 16,  '29' : 17, '30' : 18,   '31' : 19, '32' : 20, '33' : 21 }
+gpios_J5_out = { '34' : 203, '35' : 202, '36' : 177, '37' : 176, '38' : 175, '39' : 174 }
+gpios_J7_out = { '40' : 119, '41' : 124, '42' : 127, '43' : 116, '44' : 7,   '45' : 6, '46' : 5, '47' : 4 }
 
-    gpios_dict = copy(gpios_J4_in).update(gpios_J4_out).update(gpios_J6_in).update(gpios_J6_out).update(gpios_J5_out).update(gpios_J7_out)
-    base_path = "/sys/class/gpio"
+gpios_dict = dict()
+gpios_dict.update(gpios_J4_in)
+gpios_dict.update(gpios_J4_out)
+gpios_dict.update(gpios_J6_in)
+gpios_dict.update(gpios_J6_out)
+gpios_dict.update(gpios_J5_out)
+gpios_dict.update(gpios_J7_out)
+base_path = "/sys/class/gpio"
+
+
+class UdooNeo( object ):
+
+    def __init__(self):
+        print( gpios_dict )
 
 
     def export_gpio(self, pin):
-        self.gpio = str(gpios_dict[ str(pin) ])
+        gpio = str( gpios_dict[str(pin)] )
         try:
-          with open( self.base_path + "/export" , "w") as re:
+          with open( base_path + "/export" , "w") as re:
             re.write( str(gpio) )
         except Exception as e:
           print( e )
@@ -176,11 +196,21 @@ class UdooNeo( object ):
     def unexport_gpio(self, pin):
         gpio = str(gpios_dict[ str(pin) ])
         try:
-          with open( self.base_path + "/unexport" , "w") as re:
+          with open( base_path + "/unexport" , "w") as re:
             re.write( str(gpio) )
         except Exception as e:
           print( e )
         return 0
+
+    
+    def export_all_gpios(self):
+        for pin in gpios_dict.keys():
+            self.export_gpio( pin )
+
+
+    def unexport_all_gpios(self):
+        for pin in gpios_dict.keys():
+            self.unexport_gpio( pin )
 
 
     def export(self, pin, mode):
@@ -193,7 +223,7 @@ class UdooNeo( object ):
     def pinMode(self, pin, direction):
       gpio = str(gpios_dict[ str(pin) ])
       try:
-        with open("/sys/class/gpio/gpio" + gpio + "/direction", "w") as re:
+        with open(base_path + "/gpio" + gpio + "/direction", "w") as re:
           re.write( str(direction) )
       except Exception as e:
         print( e )
@@ -203,7 +233,7 @@ class UdooNeo( object ):
 
     def digitalWrire(self, pin, value):
       try:
-        with open("/sys/class/gpio/gpio" + gpio + "/value", "w") as re:
+        with open(base_path + "/gpio" + gpio + "/value", "w") as re:
           re.write( str(value) )
       except Exception as e:
         print( e )
@@ -214,7 +244,7 @@ class UdooNeo( object ):
     def digitalRead(self, pin):
       value = None
       try:
-        with open("/sys/class/gpio/gpio" + gpio + "/value", "r") as re:
+        with open(base_path + "/gpio" + gpio + "/value", "r") as re:
           value = re.read( )
       except Exception as e:
         print( e )
@@ -277,6 +307,7 @@ class UdooNeo( object ):
         return 0
 
     def analogWrite(self, pin, period, duty_cycle , enable):
+        bank, num = pwm_dict[ str(pin) ]
         try:
             with open(self.pwm_base_path + "/export", "w") as pwm:
                 pwm.write("0")
@@ -284,19 +315,19 @@ class UdooNeo( object ):
             print(e)
 
         try:
-            with open(self.pwm_base_path + "pwmchip4/pwm0/period", "w") as pwm:
+            with open(self.pwm_base_path + "pwmchip"+ bank +"/pwm"+ num +"/period", "w") as pwm:
                 pwm.write("100")
         except Exception as e:
             print(e)
 
         try:
-            with open(self.pwm_base_path + "pwmchip4/pwm0/duty_cycle", "w") as pwm:
+            with open(self.pwm_base_path + "pwmchip"+ bank +"/pwm"+ num +"/duty_cycle", "w") as pwm:
                 pwm.write("100")
         except Exception as e:
             print(e)
 
         try:
-            with open(self.pwm_base_path + "pwmchip4/pwm0/enable", "w") as pwm:
+            with open(self.pwm_base_path + "pwmchip"+ bank +"/pwm"+ num +"/enable", "w") as pwm:
                 pwm.write("0")
                 pwm.flush()
                 time.sleep(1.0)
