@@ -5,7 +5,7 @@ board = neo.UdooNeo()
 
 #board.unexport_all_gpios()
 
-#board.export_all_gpios()
+board.gpio.export_all_gpios()
 
 
 #board.export_pwm( 3 )
@@ -31,5 +31,11 @@ print ("Pressure " + str(baro))
 baro = board.barometric_brick.getTemperature()
 print ("Temperature " + str(baro))
 
-adc0 = board.analogRead( neo.A0 )
-print(adc0)
+adc0 = board.analog.analogRead( neo.A0 )
+adc1 = board.analog.analogRead( neo.A1 )
+adc2 = board.analog.analogRead( neo.A2 )
+adc3 = board.analog.analogRead( neo.A3 )
+adc4 = board.analog.analogRead( neo.A4 )
+adc5 = board.analog.analogRead( neo.A5 )
+
+print(adc0, adc1, adc2, adc3, adc4, adc5)

@@ -364,6 +364,9 @@ class UdooNeo( object ):
         self.gpio = Gpio()
         self.pwm = Pwm()
         self.analog = Analogs()
+        self.accelerometer = Accelerometer()
+        self.magnetometer = Magnetometer()
+        self.gyroscope = Gyroscope()
         print( "Neo lib initialized..." )
 
 
