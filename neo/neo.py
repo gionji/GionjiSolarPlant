@@ -6,6 +6,12 @@ OUTPUT = 'out'
 HIGH = '1'
 LOW = '0'
 
+PATH_ADC_HOST = '/sys/bus/iio/devices/'
+PATH_ADC_CONTAINER = '/var/adc/'
+PATH_ADC = PATH_ADC_HOST
+
+ADC_FOLDER = PATH_ADC
+
 A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
 A1 = ADC_FOLDER + 'iio:device0/' + 'in_voltage1_raw'
 A2 = ADC_FOLDER + 'iio:device0/' + 'in_voltage2_raw'
@@ -39,17 +45,19 @@ gpios_dict.update(gpios_J7_out)
 base_path = "/sys/class/gpio"
 
 
-class TemperatureBrick(object):
+LM75_ADDRESS = 0x48
+LM75_TEMP_REGISTER = 0
+LM75_CONF_REGISTER = 1
+LM75_THYST_REGISTER = 2
+LM75_TOS_REGISTER = 3
+LM75_CONF_SHUTDOWN = 0
+LM75_CONF_OS_COMP_INT = 1
+LM75_CONF_OS_POL = 2
+LM75_CONF_OS_F_QUE = 3
 
-    LM75_ADDRESS = 0x48
-    LM75_TEMP_REGISTER = 0
-    LM75_CONF_REGISTER = 1
-    LM75_THYST_REGISTER = 2
-    LM75_TOS_REGISTER = 3
-    LM75_CONF_SHUTDOWN = 0
-    LM75_CONF_OS_COMP_INT = 1
-    LM75_CONF_OS_POL = 2
-    LM75_CONF_OS_F_QUE = 3
+
+
+class TemperatureBrick(object):
 
     def __init__(self, mode=LM75_CONF_OS_COMP_INT, address=LM75_ADDRESS, busnum=1):
         self._mode = mode
@@ -74,7 +82,7 @@ class LightBrick(object):
 
     I2C_ADDR = 0x29
 
-    def __init__(self, address=I2C_ADDR, busnum=1):
+    def __init__(self, address=0x29, busnum=1):
         self._address = address
         self._bus = smbus.SMBus(busnum)
 
@@ -109,7 +117,7 @@ class LightBrick(object):
 
 
 
-    def getVisibleSpectrum():
+    def getVisibleSpectrum(self):
         data = self._bus.read_i2c_block_data(self._address, 0x0C | 0x80, 2)
         data1 = self._bus.read_i2c_block_data(self._address, 0x0E | 0x80, 2)
 
@@ -185,7 +193,7 @@ class UdooNeo( object ):
         self.light_brick = LightBrick()
         self.temperature_brick = TemperatureBrick()
         self.barometric_brick = BarometricBrick()
-        print( gpios_dict )
+        print( "Neo lib initialized..." )
 
 
     def export_gpio(self, pin):
@@ -296,7 +304,7 @@ class UdooNeo( object ):
         return data
 
     def analogRead(self, pin):
-        return readAdc(pin)
+        return self.readAdc(pin)
 
 
 
@@ -311,7 +319,7 @@ class UdooNeo( object ):
     def unexport_pwm(self, pin):
         return 0
 
-    def analogWrite(self, pin, period=100, duty_cycle , enable=1):
+    def analogWrite(self, pin, duty_cycle, period=100 , enable=1):
         bank, num = pwm_dict[ str(pin) ]
         try:
             with open(self.pwm_base_path + "/export", "w") as pwm:
