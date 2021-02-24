@@ -1,33 +1,3 @@
-# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
-#
-# SPDX-License-Identifier: MIT
-
-"""
-`adafruit_fxas21002c`
-====================================================
-
-CircuitPython module for the NXP FXAS21002C gyroscope.  Based on the driver
-from: https://github.com/adafruit/Adafruit_FXAS21002C
-
-See examples/simpletest.py for a demo of the usage.
-
-* Author(s): Tony DiCola
-
-Implementation Notes
---------------------
-
-**Hardware:**
-
-*  Adafruit `Precision NXP 9-DOF Breakout Board - FXOS8700 + FXAS21002
-   <https://www.adafruit.com/product/3463>`_ (Product ID: 3463)
-
-**Software and Dependencies:**
-
-* Adafruit CircuitPython firmware (2.2.0+) for the ESP8622 and M0-based boards:
-  https://github.com/adafruit/circuitpython/releases
-
-* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
-"""
 import time
 import smbus2
 
@@ -36,27 +6,21 @@ try:
 except ImportError:
     import struct
 
-__version__ = "0.0.0-auto.0"
-__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_FXAS21002C.git"
-
-
-from micropython import const
-
 
 # Internal constants and register values:
-_FXAS21002C_ADDRESS = const(0x21)  # 0100001
-_FXAS21002C_ID = const(0xD7)  # 1101 0111
-_GYRO_REGISTER_STATUS = const(0x00)
-_GYRO_REGISTER_OUT_X_MSB = const(0x01)
-_GYRO_REGISTER_OUT_X_LSB = const(0x02)
-_GYRO_REGISTER_OUT_Y_MSB = const(0x03)
-_GYRO_REGISTER_OUT_Y_LSB = const(0x04)
-_GYRO_REGISTER_OUT_Z_MSB = const(0x05)
-_GYRO_REGISTER_OUT_Z_LSB = const(0x06)
-_GYRO_REGISTER_WHO_AM_I = const(0x0C)  # 11010111   r
-_GYRO_REGISTER_CTRL_REG0 = const(0x0D)  # 00000000   r/w
-_GYRO_REGISTER_CTRL_REG1 = const(0x13)  # 00000000   r/w
-_GYRO_REGISTER_CTRL_REG2 = const(0x14)  # 00000000   r/w
+_FXAS21002C_ADDRESS = 0x20  # 0100001
+_FXAS21002C_ID = 0xD7  # 1101 0111
+_GYRO_REGISTER_STATUS = 0x00
+_GYRO_REGISTER_OUT_X_MSB = 0x01
+_GYRO_REGISTER_OUT_X_LSB = 0x02
+_GYRO_REGISTER_OUT_Y_MSB = 0x03
+_GYRO_REGISTER_OUT_Y_LSB = 0x04
+_GYRO_REGISTER_OUT_Z_MSB = 0x05
+_GYRO_REGISTER_OUT_Z_LSB = 0x06
+_GYRO_REGISTER_WHO_AM_I = 0x0C  # 11010111   r
+_GYRO_REGISTER_CTRL_REG0 = 0x0D  # 00000000   r/w
+_GYRO_REGISTER_CTRL_REG1 = 0x13  # 00000000   r/w
+_GYRO_REGISTER_CTRL_REG2 = 0x14  # 00000000   r/w
 _GYRO_SENSITIVITY_250DPS = 0.0078125  # Table 35 of datasheet
 _GYRO_SENSITIVITY_500DPS = 0.015625  # ..
 _GYRO_SENSITIVITY_1000DPS = 0.03125  # ..
@@ -80,7 +44,7 @@ class FXAS21002C:
     # thread safe!
     _BUFFER = bytearray(7)
 
-    def __init__(self, i2c, address=_FXAS21002C_ADDRESS, gyro_range=GYRO_RANGE_250DPS):
+    def __init__(self, i2c=3, address=_FXAS21002C_ADDRESS, gyro_range=GYRO_RANGE_250DPS):
         assert gyro_range in (
             GYRO_RANGE_250DPS,
             GYRO_RANGE_500DPS,
@@ -88,7 +52,7 @@ class FXAS21002C:
             GYRO_RANGE_2000DPS,
         )
         self._gyro_range = gyro_range
-        self._bus = SMBus(1)
+        self._bus = SMBus(i2c)
         self._address = address
         # Check for chip ID value.
         if self._read_u8(_GYRO_REGISTER_WHO_AM_I) != _FXAS21002C_ID:

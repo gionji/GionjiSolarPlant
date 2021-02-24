@@ -2,32 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""
-`adafruit_fxos8700`
-====================================================
-
-CircuitPython module for the NXP FXOS8700 accelerometer and magnetometer.
-Based on the driver from: https://github.com/adafruit/Adafruit_FXOS8700
-
-See examples/simpletest.py for a demo of the usage.
-
-* Author(s): Tony DiCola
-
-Implementation Notes
---------------------
-
-**Hardware:**
-
-*  Adafruit `Precision NXP 9-DOF Breakout Board - FXOS8700 + FXAS21002
-   <https://www.adafruit.com/product/3463>`_ (Product ID: 3463)
-
-**Software and Dependencies:**
-
-* Adafruit CircuitPython firmware (2.2.0+) for the ESP8622 and M0-based boards:
-  https://github.com/adafruit/circuitpython/releases
-
-* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
-"""
 try:
     import ustruct as struct
 except ImportError:
@@ -35,8 +9,6 @@ except ImportError:
 
 import smbus
 
-__version__ = "0.0.0-auto.0"
-__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_FXOS8700.git"
 
 # Register addresses and other constants:
 _FXOS8700_ADDRESS = 0x1E  # 0011111
@@ -78,26 +50,20 @@ ACCEL_RANGE_8G = 0x02
 
 
 def _twos_comp(val, bits):
-    # Convert an unsigned integer in 2's compliment form of the specified bit
-    # length to its signed integer value and return it.
     if val & (1 << (bits - 1)) != 0:
         return val - (1 << bits)
     return val
 
 
 class FXOS8700:
-    """Driver for the NXP FXOS8700 accelerometer and magnetometer."""
 
-    # Class-level buffer for reading and writing data with the sensor.
-    # This reduces memory allocations but means the code is not re-entrant or
-    # thread safe!
     _BUFFER = bytearray(13)
 
     def __init__(self, i2c_channel=3, address=_FXOS8700_ADDRESS, accel_range=ACCEL_RANGE_2G):
         assert accel_range in (ACCEL_RANGE_2G, ACCEL_RANGE_4G, ACCEL_RANGE_8G)
-        self._accel_range = accel_range 
+        self._accel_range = accel_range
         self._address = address
-        self._bus = smbus.SMBus(i2c_channel) 
+        self._bus = smbus.SMBus(i2c_channel)
 
         # Check for chip ID value.
         if self._read_u8(_FXOS8700_REGISTER_WHO_AM_I) != _FXOS8700_ID:
@@ -111,10 +77,12 @@ class FXOS8700:
             self._write_u8(_FXOS8700_REGISTER_XYZ_DATA_CFG, 0x01)
         elif accel_range == ACCEL_RANGE_8G:
             self._write_u8(_FXOS8700_REGISTER_XYZ_DATA_CFG, 0x02)
+
         # High resolution
         self._write_u8(_FXOS8700_REGISTER_CTRL_REG2, 0x02)
         # Active, Normal Mode, Low Noise, 100Hz in Hybrid Mode
         self._write_u8(_FXOS8700_REGISTER_CTRL_REG1, 0x15)
+
         # Configure the magnetometer
         # Hybrid Mode, Over Sampling Rate = 16
         self._write_u8(_FXOS8700_REGISTER_MCTRL_REG1, 0x1F)
@@ -130,18 +98,6 @@ class FXOS8700:
         # Write an 8-bit unsigned value to the specified 8-bit address.
         self._bus.write(self._address, address, val)
 
-    def read_raw(self):
-        """Read the raw gyroscope readings.  Returns a 3-tuple of X, Y, Z axis
-        16-bit signed values.  If you want the gyroscope values in friendly
-        units consider using the gyroscope property!
-        """
-        # Read gyro data from the sensor.
-        res = self._bus.read_i2c_block_data(self._address, _GYRO_REGISTER_OUT_X_MSB, 8)
-        # Parse out the gyroscope data as 16-bit signed data.
-        raw_x = struct.unpack_from(">h", res[0:2])[0]
-        raw_y = struct.unpack_from(">h", res[2:4])[0]
-        raw_z = struct.unpack_from(">h", res[4:6])[0]
-        return (raw_x, raw_y, raw_z)
 
     def read_raw_accel_mag(self):
         """Read the raw accelerometer and magnetometer readings.  Returns a
@@ -154,7 +110,7 @@ class FXOS8700:
         consider using the accelerometer and magnetometer properties!
         """
         # Read accelerometer data from sensor.
-        res = self._bus.read_i2c_block_data(self._address, _FXOS8700_REGISTER_OUT_X_MSB, 8) #################################################################
+        res = self._bus.read_i2c_block_data(self._address, _FXOS8700_REGISTER_OUT_X_MSB, 8)
         accel_raw_x = struct.unpack_from(">H", res[0:2])[0]
         accel_raw_y = struct.unpack_from(">H", res[2:4])[0]
         accel_raw_z = struct.unpack_from(">H", res[4:6])[0]
@@ -165,7 +121,7 @@ class FXOS8700:
         accel_raw_z = _twos_comp(accel_raw_z >> 2, 14)
         # Read magnetometer data from sensor.  No need to convert as this is
         # 16-bit signed data so struct parsing can handle it directly.
-        res = self._bus.read(self._address, _FXOS8700_REGISTER_MOUT_X_MSB, 8) #################################################################
+        res = self._bus.read(self._address, _FXOS8700_REGISTER_MOUT_X_MSB, 8)
         mag_raw_x = struct.unpack_from(">h", self._BUFFER[0:2])[0]
         mag_raw_y = struct.unpack_from(">h", self._BUFFER[2:4])[0]
         mag_raw_z = struct.unpack_from(">h", self._BUFFER[4:6])[0]
