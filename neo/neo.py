@@ -7,31 +7,6 @@ OUTPUT = 'out'
 HIGH   = '1'
 LOW    = '0'
 
-gpios = [ "178", "179", "104", "143", "142", "141", "140", "149", #J4in
-          "105", "148", "146", "147", "100", "102", #J6 in
-          "106", "107", "180", "181", "172", "173", "182", "124", #J4 out
-           "25",  "22",  "14",  "15",  "16",  "17",  "18",  "19",  "20",  "21",
-          "203", "202", "177", "176", "175", "174",
-          "119", "124", "127", "116",   "7",   "6",   "5",   "4"]
-
-gpios_J4_in  = { '0'  : 178, '1'  : 179, '2'  : 104, '3'  : 143, '4'  : 142, '5'  : 141, '6'  : 140, '7'  : 149 }
-gpios_J4_out = { '16' : 106, '17' : 107, '18' : 180, '19' : 181, '20' : 172, '21' : 173, '22' : 182, '23' : 124 }
-gpios_J6_in  = { '8'  : 105, '9'  : 148, '10' : 146, '11' : 147, '12' : 100, '13' : 102 }
-gpios_J6_out = { '24' : 25,  '25' : 22,  '26' : 14,  '27' : 15,  '28' : 16,  '29' : 17,  '30' : 18,  '31' : 19, '32' : 20, '33' : 21 }
-gpios_J5_out = { '34' : 203, '35' : 202, '36' : 177, '37' : 176, '38' : 175, '39' : 174 }
-gpios_J7_out = { '40' : 119, '41' : 124, '42' : 127, '43' : 116, '44' : 7,   '45' : 6,   '46' : 5,   '47' : 4 }
-
-gpios_dict = dict()
-gpios_dict.update(gpios_J4_in)
-gpios_dict.update(gpios_J4_out)
-gpios_dict.update(gpios_J6_in)
-gpios_dict.update(gpios_J6_out)
-gpios_dict.update(gpios_J5_out)
-gpios_dict.update(gpios_J7_out)
-
-base_path = "/sys/class/gpio"
-
-
 
 
 class TemperatureBrick(object):
@@ -58,7 +33,7 @@ class TemperatureBrick(object):
         return (temp * (9.0/5.0)) + 32.0
 
     def getTemperature(self):
-        raw = self._bus.read_word_data(self._address, LM75_TEMP_REGISTER) & 0xFFFF
+        raw = self._bus.read_word_data(self._address, self.LM75_TEMP_REGISTER) & 0xFFFF
         raw = ((raw << 8) & 0xFF00) + (raw >> 8)
         return self.regdata2float(raw)
 
@@ -174,6 +149,11 @@ class BarometricBrick(object):
 
 class Gpio(object):
 
+    INPUT  = 'in'
+    OUTPUT = 'out'
+    HIGH   = '1'
+    LOW    = '0'
+
     gpios = [ "178", "179", "104", "143", "142", "141", "140", "149", #J4in
               "105", "148", "146", "147", "100", "102", #J6 in
               "106", "107", "180", "181", "172", "173", "182", "124", #J4 out
@@ -188,18 +168,19 @@ class Gpio(object):
     gpios_J5_out = { '34' : 203, '35' : 202, '36' : 177, '37' : 176, '38' : 175, '39' : 174 }
     gpios_J7_out = { '40' : 119, '41' : 124, '42' : 127, '43' : 116, '44' : 7,   '45' : 6,   '46' : 5,   '47' : 4 }
 
-    gpios_dict = dict()
-    gpios_dict.update(gpios_J4_in)
-    gpios_dict.update(gpios_J4_out)
-    gpios_dict.update(gpios_J6_in)
-    gpios_dict.update(gpios_J6_out)
-    gpios_dict.update(gpios_J5_out)
-    gpios_dict.update(gpios_J7_out)
+    _gpios_dict = dict()
+    _gpios_dict.update(gpios_J4_in)
+    _gpios_dict.update(gpios_J4_out)
+    _gpios_dict.update(gpios_J6_in)
+    _gpios_dict.update(gpios_J6_out)
+    _gpios_dict.update(gpios_J5_out)
+    _gpios_dict.update(gpios_J7_out)
 
-    base_path = "/sys/class/gpio"
+    DEFAULT_BASE_PATH = "/sys/class/gpio"
 
     def __init__(self):
-        print("gpiosss")
+        self.base_path = self.DEFAULT_BASE_PATH
+        self.gpios_dict = self._gpios_dict
 
     def export_gpio(self, pin):
         gpio = str( self.gpios_dict[str(pin)] )
@@ -242,9 +223,10 @@ class Gpio(object):
       return 0
 
 
-    def digitalWrire(self, pin, value):
+    def digitalWrite(self, pin, value):
+      gpio = str(self.gpios_dict[ str(pin) ])
       try:
-        with open(base_path + "/gpio" + gpio + "/value", "w") as re:
+        with open(self.base_path + "/gpio" + gpio + "/value", "w") as re:
           re.write( str(value) )
       except Exception as e:
         print( e )
@@ -255,7 +237,7 @@ class Gpio(object):
     def digitalRead(self, pin):
       value = None
       try:
-        with open(base_path + "/gpio" + gpio + "/value", "r") as re:
+        with open(self.base_path + "/gpio" + gpio + "/value", "r") as re:
           value = re.read( )
       except Exception as e:
         print( e )
@@ -269,22 +251,40 @@ class Pwm(object):
     pwm_pins = [3, 4, 5, 6, 7, 9, 11, 10] # from pwm_1 to 8
     pwm_dict = {"3" : (0, 0), "4" : (0, 1), "5" : (0, 2), "6" : (0, 3), "7" : (1, 0), "9" : (1, 1), "11" : (1, 2), "10" : (1, 3)  }
 
-    def __init__(self, pwm_base_path=self.default_pwm_base_path):
-        self.pwm_base_path = pwm_base_path
+    def __init__(self, _pwm_base_path=default_pwm_base_path):
+        self.pwm_base_path = _pwm_base_path
+
+    def setBasePath(self, _path):
+        self.pwm_base_path = _path
 
     def export_pwm(self, pin):
-        return 0
+        assert pin in pwm_pins
 
-    def unexport_pwm(self, pin):
-        return 0
-
-    def analogWrite(self, pin, duty_cycle, period=100 , enable=1):
         bank, num = self.pwm_dict[ str(pin) ]
         try:
             with open(self.pwm_base_path + "/export", "w") as pwm:
                 pwm.write(str( bank * 4 + num ))
         except Exception as e:
             print(e)
+
+        return 0
+
+
+    def unexport_pwm(self, pin):
+        assert pin in pwm_pins
+
+        bank, num = self.pwm_dict[ str(pin) ]
+        try:
+            with open(self.pwm_base_path + "/unexport", "w") as pwm:
+                pwm.write(str( bank * 4 + num ))
+        except Exception as e:
+            print(e)
+
+        return 0
+
+
+    def analogWrite(self, pin, duty_cycle, period=100 , enable=1):
+        bank, num = self.pwm_dict[ str(pin) ]
 
         try:
             with open(self.pwm_base_path + "pwmchip"+ bank +"/pwm"+ num +"/period", "w") as pwm:
@@ -311,7 +311,6 @@ class Analogs(object):
     PATH_ADC_HOST      = '/sys/bus/iio/devices/'
     PATH_ADC_CONTAINER = '/var/adc/'
     PATH_ADC           = PATH_ADC_HOST
-
     ADC_FOLDER         = PATH_ADC
 
     A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
@@ -352,7 +351,10 @@ class Analogs(object):
         f.close()
         return data
 
-    def readBurst(self, pinPath, size=self.burst_size):
+    def readBurst(self, pinPath, size=None):
+        if size == None:
+            size = self.burst_size
+
         data = list()
         for i in range( 0, int(size) ):
             data.append( readAdc(pinPath) )
@@ -417,6 +419,9 @@ class Gyroscope(object):
 
 
 
+GPIO = 'GPIO'
+PWM = 'PWM'
+
 
 class UdooNeo( object ):
 
@@ -434,9 +439,18 @@ class UdooNeo( object ):
 
 
     def export(self, pin, mode):
+
+        if mode == 'GPIO':
+            gpio.export_gpio(pin)
+        elif mode == 'PWM':
+            pwm.export_pwm(pin)
+
         return 0
 
     def unexport(self, pin):
+        gpio.unexport(pin)
+        pwm.unexport(pin)
+
         return 0
 
 

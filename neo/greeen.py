@@ -1,14 +1,11 @@
 import neo
-
+import time
 
 board = neo.UdooNeo()
 
 #board.unexport_all_gpios()
 
 board.gpio.export_all_gpios()
-
-
-#board.export_pwm( 3 )
 
 temp = board.temperature_brick.getTemperature()
 print("Temperature " + str(temp))
@@ -39,3 +36,17 @@ adc4 = board.analog.analogRead( board.analog.A4 )
 adc5 = board.analog.analogRead( board.analog.A5 )
 
 print(adc0, adc1, adc2, adc3, adc4, adc5)
+
+
+
+for i in range(2, 10):
+    board.gpio.pinMode(i, neo.OUTPUT)
+
+for j in range(1, 5):
+    for i in range(2, 10):
+        board.gpio.digitalWrite(i, neo.HIGH)
+    time.sleep(3)
+    for i in range(2, 10):
+        board.gpio.digitalWrite(i, neo.LOW)
+    time.sleep(3)
+
