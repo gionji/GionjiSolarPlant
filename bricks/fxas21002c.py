@@ -29,6 +29,7 @@ Implementation Notes
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
 import time
+import smbus2
 
 try:
     import ustruct as struct
@@ -38,7 +39,7 @@ except ImportError:
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_FXAS21002C.git"
 
-import adafruit_bus_device.i2c_device as i2c_dev
+
 from micropython import const
 
 
@@ -87,7 +88,8 @@ class FXAS21002C:
             GYRO_RANGE_2000DPS,
         )
         self._gyro_range = gyro_range
-        self._device = i2c_dev.I2CDevice(i2c, address)
+        self._bus = SMBus(1)
+        self._address = address
         # Check for chip ID value.
         if self._read_u8(_GYRO_REGISTER_WHO_AM_I) != _FXAS21002C_ID:
             raise RuntimeError("Failed to find FXAS21002C, check wiring!")
@@ -112,17 +114,12 @@ class FXAS21002C:
 
     def _read_u8(self, address):
         # Read an 8-bit unsigned value from the specified 8-bit address.
-        with self._device as i2c:
-            self._BUFFER[0] = address & 0xFF
-            i2c.write_then_readinto(self._BUFFER, self._BUFFER, out_end=1, in_end=1)
-        return self._BUFFER[0]
+        res = self._bus.read( self._address , address)
+        return res
 
     def _write_u8(self, address, val):
         # Write an 8-bit unsigned value to the specified 8-bit address.
-        with self._device as i2c:
-            self._BUFFER[0] = address & 0xFF
-            self._BUFFER[1] = val & 0xFF
-            i2c.write(self._BUFFER, end=2)
+        self._bus.write(self._address, address, val)
 
     def read_raw(self):
         """Read the raw gyroscope readings.  Returns a 3-tuple of X, Y, Z axis
@@ -130,13 +127,11 @@ class FXAS21002C:
         units consider using the gyroscope property!
         """
         # Read gyro data from the sensor.
-        with self._device as i2c:
-            self._BUFFER[0] = _GYRO_REGISTER_OUT_X_MSB
-            i2c.write_then_readinto(self._BUFFER, self._BUFFER, out_end=1)
+        res = self._bus.read(self._address, _GYRO_REGISTER_OUT_X_MSB, 8)
         # Parse out the gyroscope data as 16-bit signed data.
-        raw_x = struct.unpack_from(">h", self._BUFFER[0:2])[0]
-        raw_y = struct.unpack_from(">h", self._BUFFER[2:4])[0]
-        raw_z = struct.unpack_from(">h", self._BUFFER[4:6])[0]
+        raw_x = struct.unpack_from(">h", res[0:2])[0]
+        raw_y = struct.unpack_from(">h", res[2:4])[0]
+        raw_z = struct.unpack_from(">h", res[4:6])[0]
         return (raw_x, raw_y, raw_z)
 
     # pylint is confused and incorrectly marking this function as bad return
