@@ -2,22 +2,6 @@ import smbus
 import time
 
 
-PATH_ADC_HOST      = '/sys/bus/iio/devices/'
-PATH_ADC_CONTAINER = '/var/adc/'
-PATH_ADC           = PATH_ADC_HOST
-
-ADC_FOLDER         = PATH_ADC
-
-A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
-A1 = ADC_FOLDER + 'iio:device0/' + 'in_voltage1_raw'
-A2 = ADC_FOLDER + 'iio:device0/' + 'in_voltage2_raw'
-A3 = ADC_FOLDER + 'iio:device0/' + 'in_voltage3_raw'
-A4 = ADC_FOLDER + 'iio:device1/' + 'in_voltage0_raw'
-A5 = ADC_FOLDER + 'iio:device1/' + 'in_voltage1_raw'
-
-DEFAULT_BURST_SIZE = 1024;
-
-
 INPUT  = 'in'
 OUTPUT = 'out'
 HIGH   = '1'
@@ -26,7 +10,7 @@ LOW    = '0'
 gpios = [ "178", "179", "104", "143", "142", "141", "140", "149", #J4in
           "105", "148", "146", "147", "100", "102", #J6 in
           "106", "107", "180", "181", "172", "173", "182", "124", #J4 out
-          "25",  "22",  "14",  "15",  "16",  "17",  "18",   "19",  "20",  "21",
+           "25",  "22",  "14",  "15",  "16",  "17",  "18",  "19",  "20",  "21",
           "203", "202", "177", "176", "175", "174",
           "119", "124", "127", "116",   "7",   "6",   "5",   "4"]
 
@@ -48,18 +32,19 @@ gpios_dict.update(gpios_J7_out)
 base_path = "/sys/class/gpio"
 
 
-LM75_ADDRESS          = 0x48
-LM75_TEMP_REGISTER    = 0
-LM75_CONF_REGISTER    = 1
-LM75_THYST_REGISTER   = 2
-LM75_TOS_REGISTER     = 3
-LM75_CONF_SHUTDOWN    = 0
-LM75_CONF_OS_COMP_INT = 1
-LM75_CONF_OS_POL      = 2
-LM75_CONF_OS_F_QUE    = 3
 
 
 class TemperatureBrick(object):
+
+    LM75_ADDRESS          = 0x48
+    LM75_TEMP_REGISTER    = 0
+    LM75_CONF_REGISTER    = 1
+    LM75_THYST_REGISTER   = 2
+    LM75_TOS_REGISTER     = 3
+    LM75_CONF_SHUTDOWN    = 0
+    LM75_CONF_OS_COMP_INT = 1
+    LM75_CONF_OS_POL      = 2
+    LM75_CONF_OS_F_QUE    = 3
 
     def __init__(self, mode=LM75_CONF_OS_COMP_INT, address=LM75_ADDRESS, busnum=1):
         self._mode = mode
@@ -84,7 +69,7 @@ class LightBrick(object):
 
     I2C_ADDR = 0x29
 
-    def __init__(self, address=0x29, busnum=1):
+    def __init__(self, address=I2C_ADDR, busnum=1):
         self._address = address
         self._bus = smbus.SMBus(busnum)
 
@@ -126,12 +111,16 @@ class LightBrick(object):
 
         return ch0 - ch1
 
+    def getLight(self):
+        return getVisibleSpectrum()
 
 
 
 class BarometricBrick(object):
 
-    def __init__(self, address=0x60, busnum=1):
+    BAROMETRIC_BRIC_I2C_ADDRESS = 0x60
+
+    def __init__(self, address=BAROMETRIC_BRIC_I2C_ADDRESS, busnum=1):
         self._address = address
         self._bus = smbus.SMBus(busnum)
 
@@ -185,13 +174,37 @@ class BarometricBrick(object):
 
 class Gpio(object):
 
+    gpios = [ "178", "179", "104", "143", "142", "141", "140", "149", #J4in
+              "105", "148", "146", "147", "100", "102", #J6 in
+              "106", "107", "180", "181", "172", "173", "182", "124", #J4 out
+               "25",  "22",  "14",  "15",  "16",  "17",  "18",  "19",  "20",  "21",
+              "203", "202", "177", "176", "175", "174",
+              "119", "124", "127", "116",   "7",   "6",   "5",   "4"]
+
+    gpios_J4_in  = { '0'  : 178, '1'  : 179, '2'  : 104, '3'  : 143, '4'  : 142, '5'  : 141, '6'  : 140, '7'  : 149 }
+    gpios_J4_out = { '16' : 106, '17' : 107, '18' : 180, '19' : 181, '20' : 172, '21' : 173, '22' : 182, '23' : 124 }
+    gpios_J6_in  = { '8'  : 105, '9'  : 148, '10' : 146, '11' : 147, '12' : 100, '13' : 102 }
+    gpios_J6_out = { '24' : 25,  '25' : 22,  '26' : 14,  '27' : 15,  '28' : 16,  '29' : 17,  '30' : 18,  '31' : 19, '32' : 20, '33' : 21 }
+    gpios_J5_out = { '34' : 203, '35' : 202, '36' : 177, '37' : 176, '38' : 175, '39' : 174 }
+    gpios_J7_out = { '40' : 119, '41' : 124, '42' : 127, '43' : 116, '44' : 7,   '45' : 6,   '46' : 5,   '47' : 4 }
+
+    gpios_dict = dict()
+    gpios_dict.update(gpios_J4_in)
+    gpios_dict.update(gpios_J4_out)
+    gpios_dict.update(gpios_J6_in)
+    gpios_dict.update(gpios_J6_out)
+    gpios_dict.update(gpios_J5_out)
+    gpios_dict.update(gpios_J7_out)
+
+    base_path = "/sys/class/gpio"
+
     def __init__(self):
         print("gpiosss")
 
     def export_gpio(self, pin):
-        gpio = str( gpios_dict[str(pin)] )
+        gpio = str( self.gpios_dict[str(pin)] )
         try:
-          with open( base_path + "/export" , "w") as re:
+          with open( self.base_path + "/export" , "w") as re:
             re.write( str(gpio) )
         except Exception as e:
           print( e )
@@ -199,9 +212,9 @@ class Gpio(object):
 
 
     def unexport_gpio(self, pin):
-        gpio = str(gpios_dict[ str(pin) ])
+        gpio = str(self.gpios_dict[ str(pin) ])
         try:
-          with open( base_path + "/unexport" , "w") as re:
+          with open( self.base_path + "/unexport" , "w") as re:
             re.write( str(gpio) )
         except Exception as e:
           print( e )
@@ -209,19 +222,19 @@ class Gpio(object):
 
 
     def export_all_gpios(self):
-        for pin in gpios_dict.keys():
+        for pin in self.gpios_dict.keys():
             self.export_gpio( pin )
 
 
     def unexport_all_gpios(self):
-        for pin in gpios_dict.keys():
+        for pin in self.gpios_dict.keys():
             self.unexport_gpio( pin )
 
 
     def pinMode(self, pin, direction):
-      gpio = str(gpios_dict[ str(pin) ])
+      gpio = str(self.gpios_dict[ str(pin) ])
       try:
-        with open(base_path + "/gpio" + gpio + "/direction", "w") as re:
+        with open(self.base_path + "/gpio" + gpio + "/direction", "w") as re:
           re.write( str(direction) )
       except Exception as e:
         print( e )
@@ -252,9 +265,12 @@ class Gpio(object):
 
 class Pwm(object):
 
-    pwm_base_path = "/sys/class/pwm/"
+    default_pwm_base_path = "/sys/class/pwm/"
     pwm_pins = [3, 4, 5, 6, 7, 9, 11, 10] # from pwm_1 to 8
     pwm_dict = {"3" : (0, 0), "4" : (0, 1), "5" : (0, 2), "6" : (0, 3), "7" : (1, 0), "9" : (1, 1), "11" : (1, 2), "10" : (1, 3)  }
+
+    def __init__(self, pwm_base_path=self.default_pwm_base_path):
+        self.pwm_base_path = pwm_base_path
 
     def export_pwm(self, pin):
         return 0
@@ -292,13 +308,51 @@ class Pwm(object):
 
 class Analogs(object):
 
+    PATH_ADC_HOST      = '/sys/bus/iio/devices/'
+    PATH_ADC_CONTAINER = '/var/adc/'
+    PATH_ADC           = PATH_ADC_HOST
+
+    ADC_FOLDER         = PATH_ADC
+
+    A0 = ADC_FOLDER + 'iio:device0/' + 'in_voltage0_raw'
+    A1 = ADC_FOLDER + 'iio:device0/' + 'in_voltage1_raw'
+    A2 = ADC_FOLDER + 'iio:device0/' + 'in_voltage2_raw'
+    A3 = ADC_FOLDER + 'iio:device0/' + 'in_voltage3_raw'
+    A4 = ADC_FOLDER + 'iio:device1/' + 'in_voltage0_raw'
+    A5 = ADC_FOLDER + 'iio:device1/' + 'in_voltage1_raw'
+
+    DEFAULT_BURST_SIZE = 1024;
+
+    def __init__(self, _base_path=PATH_ADC, _burst_size = DEFAULT_BURST_SIZE):
+        self.path = _base_path
+        self.burst_size = _burst_size
+        A0 = self.path + 'iio:device0/' + 'in_voltage0_raw'
+        A1 = self.path + 'iio:device0/' + 'in_voltage1_raw'
+        A2 = self.path + 'iio:device0/' + 'in_voltage2_raw'
+        A3 = self.path + 'iio:device0/' + 'in_voltage3_raw'
+        A4 = self.path + 'iio:device1/' + 'in_voltage0_raw'
+        A5 = self.path + 'iio:device1/' + 'in_voltage1_raw'
+
+    def setBasePath(self, _basePath):
+        self.path = _basePath
+        A0 = self.path + 'iio:device0/' + 'in_voltage0_raw'
+        A1 = self.path + 'iio:device0/' + 'in_voltage1_raw'
+        A2 = self.path + 'iio:device0/' + 'in_voltage2_raw'
+        A3 = self.path + 'iio:device0/' + 'in_voltage3_raw'
+        A4 = self.path + 'iio:device1/' + 'in_voltage0_raw'
+        A5 = self.path + 'iio:device1/' + 'in_voltage1_raw'
+
     def readAdc(self, pinPath):
+        assert pinPath in (
+            self.A0, self.A1, self.A2, self.A3, self.A4, self.A5
+        )
+
         f = open(pinPath, 'r')
         data = int(f.read())
         f.close()
         return data
 
-    def readBurst(self, pinPath, size=DEFAULT_BURST_SIZE):
+    def readBurst(self, pinPath, size=self.burst_size):
         data = list()
         for i in range( 0, int(size) ):
             data.append( readAdc(pinPath) )
@@ -316,6 +370,9 @@ class Accelerometer(object):
     def getData(self):
         print("get data")
 
+    def setFrequency(self):
+        print("set freq")
+
     def enable(self):
         print("en")
 
@@ -331,6 +388,9 @@ class Magnetometer(object):
     def getData(self):
         print("get data")
 
+    def setFrequency(self):
+        print("set freq")
+
     def enable(self):
         print("en")
 
@@ -345,6 +405,9 @@ class Gyroscope(object):
 
     def getData(self):
         print("get data")
+
+    def setFrequency(self):
+        print("set freq")
 
     def enable(self):
         print("en")
