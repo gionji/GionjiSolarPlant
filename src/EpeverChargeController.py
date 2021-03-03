@@ -76,7 +76,7 @@ class EpeverChargeController:
         except:
             None
 
-        try:            
+        try:
             data['panelCurrent']       = float(result.registers[1] / 100.0)
         except:
             None
