@@ -147,6 +147,24 @@ class BarometricBrick(object):
         return pressure
 
 
+class Accelerometer(object):
+
+    def __init__(self):
+        self.base_path = None    
+    
+
+class Magnetometer(object):
+
+    def __init__(self):
+        self.base_path = None  
+
+
+class Gyroscope(object):
+
+    def __init__(self):
+        self.base_path = None  
+
+
 class Gpio(object):
 
     INPUT  = 'in'

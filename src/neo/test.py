@@ -3,8 +3,6 @@ import neo
 
 board = neo.UdooNeo()
 
-#board.unexport_all_gpios()
-
 board.gpio.export_all_gpios()
 
 
